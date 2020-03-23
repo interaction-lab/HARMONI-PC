@@ -1,0 +1,19 @@
+digraph G {
+"HeadPitch" -> "Camera"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1576194940.455 sec old)\nBuffer length: 0.000 sec\n"];
+"HeadYaw" -> "HeadPitch"[label="Broadcaster: /robot_state_publisher\nAverage rate: 2.222 Hz\nMost recent transform: 1576146079.017 ( 48861.438 sec old)\nBuffer length: 4.500 sec\n"];
+"HeadPitch" -> "Eyes"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1576194940.455 sec old)\nBuffer length: 0.000 sec\n"];
+"LeftElbowRoll" -> "LeftHand"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1576194940.455 sec old)\nBuffer length: 0.000 sec\n"];
+"LeftShoulderRoll" -> "LeftElbowRoll"[label="Broadcaster: /robot_state_publisher\nAverage rate: 2.222 Hz\nMost recent transform: 1576146079.017 ( 48861.438 sec old)\nBuffer length: 4.500 sec\n"];
+"base_link" -> "NeckFrame"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1576194940.455 sec old)\nBuffer length: 0.000 sec\n"];
+"RightElbowRoll" -> "RightHand"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1576194940.455 sec old)\nBuffer length: 0.000 sec\n"];
+"RightShoulderRoll" -> "RightElbowRoll"[label="Broadcaster: /robot_state_publisher\nAverage rate: 2.222 Hz\nMost recent transform: 1576146079.017 ( 48861.438 sec old)\nBuffer length: 4.500 sec\n"];
+"base_link" -> "HeadYaw"[label="Broadcaster: /robot_state_publisher\nAverage rate: 2.222 Hz\nMost recent transform: 1576146079.017 ( 48861.438 sec old)\nBuffer length: 4.500 sec\n"];
+"LeftShoulderPitch" -> "LeftShoulderRoll"[label="Broadcaster: /robot_state_publisher\nAverage rate: 2.222 Hz\nMost recent transform: 1576146079.017 ( 48861.438 sec old)\nBuffer length: 4.500 sec\n"];
+"base_link" -> "LeftShoulderPitch"[label="Broadcaster: /robot_state_publisher\nAverage rate: 2.222 Hz\nMost recent transform: 1576146079.017 ( 48861.438 sec old)\nBuffer length: 4.500 sec\n"];
+"RightShoulderPitch" -> "RightShoulderRoll"[label="Broadcaster: /robot_state_publisher\nAverage rate: 2.222 Hz\nMost recent transform: 1576146079.017 ( 48861.438 sec old)\nBuffer length: 4.500 sec\n"];
+"base_link" -> "RightShoulderPitch"[label="Broadcaster: /robot_state_publisher\nAverage rate: 2.222 Hz\nMost recent transform: 1576146079.017 ( 48861.438 sec old)\nBuffer length: 4.500 sec\n"];
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 1576194940.455"[ shape=plaintext ] ;
+ }->"base_link";
+}
