@@ -1,0 +1,12 @@
+# Configuration file for the microphone
+mic_param:
+  audio_format_width: 2
+  chunk_size: 1024
+  total_channels: 1
+  audio_rate: 16000
+  silence_limit_seconds: 10
+  previous_audio_seconds: 2
+  total_silence_samples: 1000
+  silence_threshold: 100
+  device_name: default
+  loudest_sound_value: 1.5
