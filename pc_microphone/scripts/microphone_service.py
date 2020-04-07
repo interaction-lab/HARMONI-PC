@@ -41,13 +41,18 @@ class MicrophoneService(HarmoniServiceManager):
         """Setup the microphone service as server """
         self.status = "INIT" # Status: INIT, LISTENING, STOP LISTENING
         super(MicrophoneService, self).__init__(self.status)
-        self.hardware_reading_server = HarwareReadingServer(name= self.name, service_manager= MicrophoneService())
+        self.hardware_reading_server = HarwareReadingServer(name= self.name, service_manager=super(MicrophoneService, self))
 
+    def test(self):
+        super(MicrophoneService, self).test()
+        rospy.loginfo("Test the %s service" % self.name)
+        success = True
+        return success
 
 
     def setup_microphone(self):
         """ Setup the microphone """
-        rospy.loginfo("Setting up the microphone")
+        rospy.loginfo("Setting up the %s" % self.name)
         self.get_index_device() # get index of the input audio device
         self.determine_silence_threshold(self.set_threshold)
         return
@@ -73,7 +78,7 @@ class MicrophoneService(HarmoniServiceManager):
     def listen(self):
         """Listening from the microphone """
         self.open_stream()
-        rospy.loginfo("The microphone is listening")
+        rospy.loginfo("The %s is listening" % self.name)
         current_audio = ""
         chunks_per_second = int(self.audio_rate / self.chunk_size)
         sliding_window = deque(maxlen = self.silence_limit_seconds * chunks_per_second)

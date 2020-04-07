@@ -1,8 +1,12 @@
-# Python Dependencies
+# Dependencies
 Lib dependencies:
 - pyaudio:
     ```
     sudo apt-get install python-pyaudio
+    ```
+- audio_common_msgs:
+    ```
+    sudo apt-get install audio-common-msgs
     ```
 
 # Microphone Service Parameters:
