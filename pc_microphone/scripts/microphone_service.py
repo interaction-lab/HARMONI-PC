@@ -12,10 +12,12 @@ from harmoni_common_lib.child import HarwareReadingServer
 from harmoni_common_lib.service_manager import HarmoniServiceManager
 from audio_common_msgs.msg import AudioData
 
+
 class MicrophoneService(HarmoniServiceManager):
     """
     Microphone service
     """
+
     def __init__(self, name, mic_param):
         """ Initialization of variables and microphone parameters """
         rospy.loginfo("MicrophoneService initializing")
@@ -33,15 +35,17 @@ class MicrophoneService(HarmoniServiceManager):
         self.set_threshold = mic_param["set_threshold"]
         """ Setup the microphone """
         self.p = pyaudio.PyAudio()
-        self.audio_format = pyaudio.paInt16 # How can we trasform it in a input parameter?
+        self.audio_format = pyaudio.paInt16  # How can we trasform it in a input parameter?
         self.stream = None
         self.setup_microphone()
         """Init the publisher """
-        self.mic_pub = rospy.Publisher("/harmoni/sensing/microphone", AudioData, queue_size= 1)
+        self.mic_pub = rospy.Publisher("/harmoni/sensing/microphone", AudioData, queue_size=1)
         """Setup the microphone service as server """
-        self.status = "INIT" # Status: INIT, LISTENING, STOP LISTENING
+        self.status = "INIT"  # Status: INIT, LISTENING, STOP LISTENING
         super(MicrophoneService, self).__init__(self.status)
-        self.hardware_reading_server = HarwareReadingServer(name= self.name, service_manager=super(MicrophoneService, self))
+        # self.hardware_reading_server = HarwareReadingServer(name=self.name, service_manager=super(MicrophoneService, self))
+        self.listening = False
+        return
 
     def test(self):
         super(MicrophoneService, self).test()
@@ -49,11 +53,25 @@ class MicrophoneService(HarmoniServiceManager):
         success = True
         return success
 
+    def start(self):
+        super(MicrophoneService, self).start()
+        self.open_stream()
+        self.listening = True
+        self.listen()
+
+    def stop(self):
+        super(MicrophoneService, self).stop()
+        self.close_stream()
+        self.listening = False
+
+    def pause(self):
+        super(MicrophoneService, self).pause()
+        self.listening = False
 
     def setup_microphone(self):
         """ Setup the microphone """
         rospy.loginfo("Setting up the %s" % self.name)
-        self.get_index_device() # get index of the input audio device
+        self.get_index_device()  # get index of the input audio device
         self.determine_silence_threshold(self.set_threshold)
         return
 
@@ -61,12 +79,12 @@ class MicrophoneService(HarmoniServiceManager):
         """Opening the stream """
         rospy.loginfo("Opening the audio input stream")
         self.stream = self.p.open(
-            format = self.audio_format, 
-            channels= self.total_channels, 
-            rate=self.audio_rate, input=True, 
-            input_device_index=self.input_device_index, 
+            format=self.audio_format,
+            channels=self.total_channels,
+            rate=self.audio_rate, input=True,
+            input_device_index=self.input_device_index,
             frames_per_buffer=self.chunk_size
-            )
+        )
         return
 
     def close_stream(self):
@@ -81,32 +99,33 @@ class MicrophoneService(HarmoniServiceManager):
         rospy.loginfo("The %s is listening" % self.name)
         current_audio = ""
         chunks_per_second = int(self.audio_rate / self.chunk_size)
-        sliding_window = deque(maxlen = self.silence_limit_seconds * chunks_per_second)
-        prev_audio = deque(maxlen = self.previous_audio_seconds * chunks_per_second)
+        sliding_window = deque(maxlen=self.silence_limit_seconds * chunks_per_second)
+        prev_audio = deque(maxlen=self.previous_audio_seconds * chunks_per_second)
         started = False
         while not rospy.is_shutdown():
-            latest_audio_data = self.stream.read(self.chunk_size)
-            if self.status == "LISTENING":
-                sliding_window.append(math.sqrt(abs(audioop.avg(latest_audio_data, self.audio_format_width))))
-                if any([x > self.silence_threshold for x in sliding_window]):
-                    if not started:
-                        rospy.loginfo("Sound detected")
-                        started = True
-                    current_audio += latest_audio_data
-                elif started:
-                    rospy.loginfo("Finished detecting")
-                    all_audio_data = "".join(prev_audio) + current_audio
-                    #self.stream.stop_stream()
-                    self.status = "STOP LISTENING"
-                    audio_bitstream = np.fromstring(all_audio_data, np.uint8)
-                    audio = audio_bitstream.tolist()
-                    self.mic_pub.publish(audio) # Publishing AudioData
-                    started = False
-                    sliding_window.clear()
-                    prev_audio.clear()
-                    current_audio = ""
-                else:
-                    prev_audio.append(latest_audio_data)
+            if self.listening:
+                latest_audio_data = self.stream.read(self.chunk_size)
+                if self.status == "LISTENING":
+                    sliding_window.append(math.sqrt(abs(audioop.avg(latest_audio_data, self.audio_format_width))))
+                    if any([x > self.silence_threshold for x in sliding_window]):
+                        if not started:
+                            rospy.loginfo("Sound detected")
+                            started = True
+                        current_audio += latest_audio_data
+                    elif started:
+                        rospy.loginfo("Finished detecting")
+                        all_audio_data = "".join(prev_audio) + current_audio
+                        # self.stream.stop_stream()
+                        self.status = "STOP LISTENING"
+                        audio_bitstream = np.fromstring(all_audio_data, np.uint8)
+                        audio = audio_bitstream.tolist()
+                        self.mic_pub.publish(audio)  # Publishing AudioData
+                        started = False
+                        sliding_window.clear()
+                        prev_audio.clear()
+                        current_audio = ""
+                    else:
+                        prev_audio.append(latest_audio_data)
         return
 
     def get_index_device(self):
@@ -117,7 +136,7 @@ class MicrophoneService(HarmoniServiceManager):
         for i in range(self.p.get_device_count()):
             device = self.p.get_device_info_by_index(i)
             if device["name"] == self.device_name:
-                rospy.loginfo("Found device with name "+ self.device_name)
+                rospy.loginfo("Found device with name " + self.device_name)
                 self.input_device_index = i
                 return
 
@@ -130,22 +149,20 @@ class MicrophoneService(HarmoniServiceManager):
             tss = self.total_silence_samples
             values = [math.sqrt(abs(audioop.avg(self.stream.read(self.chunk_size), self.audio_format_width))) for _ in range(tss)]
             values = sorted(values, reverse=True)
-            sum_of_loudest_sounds= sum(values[:int(tss * loudest_sound_cohort_size)])
+            sum_of_loudest_sounds = sum(values[:int(tss * loudest_sound_cohort_size)])
             total_samples_in_cohort = int(tss * loudest_sound_cohort_size)
             average_of_loudest_sounds = sum_of_loudest_sounds / total_samples_in_cohort
-            self.close_stream()        
+            self.close_stream()
         elif mode == "constant":
             average_of_loudest_sounds = self.loudest_sound_value
-        rospy.loginfo("Average audio intensity is "+ str(average_of_loudest_sounds))
+        rospy.loginfo("Average audio intensity is " + str(average_of_loudest_sounds))
         self.silence_threshold = average_of_loudest_sounds * silence_threshold_multiplier
         rospy.loginfo("Silence threshold set to " + str(self.silence_threshold))
         return
 
 
-
-
 def main():
-    try: 
+    try:
         service_name = "microphone"
         rospy.init_node(service_name + "_node")
         last_event = ""  # TODO: How to get information about last_event from behavior controller?
@@ -153,7 +170,9 @@ def main():
         # I am not 100% sure but I think you need to pass the same set of args to a parent init
         # Or possible use *args, *kwargs
         ms = MicrophoneService(service_name, mic_param)
-        ms.listen()
+        hardware_reading_server = HarwareReadingServer(name=service_name, service_manager=ms)
+        ms.start()
+
         rospy.spin()
     except rospy.ROSInterruptException:
         pass
@@ -161,6 +180,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-    
-    
