@@ -54,17 +54,21 @@ class MicrophoneService(HarmoniServiceManager):
         return success
 
     def start(self):
-        super(MicrophoneService, self).start()
+        rospy.loginfo("Start the %s service" % self.name)
+        rate = ""
+        super(MicrophoneService, self).start(rate)
         self.open_stream()
         self.listening = True
         self.listen()
 
     def stop(self):
+        rospy.loginfo("Stop the %s service" % self.name)
         super(MicrophoneService, self).stop()
         self.close_stream()
         self.listening = False
 
     def pause(self):
+        rospy.loginfo("Pause the %s service" % self.name)
         super(MicrophoneService, self).pause()
         self.listening = False
 
@@ -171,8 +175,7 @@ def main():
         # Or possible use *args, *kwargs
         ms = MicrophoneService(service_name, mic_param)
         hardware_reading_server = HarwareReadingServer(name=service_name, service_manager=ms)
-        ms.start()
-
+        #ms.start()
         rospy.spin()
     except rospy.ROSInterruptException:
         pass
