@@ -25,21 +25,21 @@ class MicrophoneService(HarmoniServiceManager):
     Microphone service
     """
 
-    def __init__(self, name, mic_param):
+    def __init__(self, name, param):
         """ Initialization of variables and microphone parameters """
         rospy.loginfo("MicrophoneService initializing")
         self.name = name
-        self.audio_format_width = mic_param["audio_format_width"]
-        self.chunk_size = mic_param["chunk_size"]
-        self.total_channels = mic_param["total_channels"]
-        self.audio_rate = mic_param["audio_rate"]
-        self.silence_limit_seconds = mic_param["silence_limit_seconds"]
-        self.previous_audio_seconds = mic_param["previous_audio_seconds"]
-        self.total_silence_samples = mic_param["total_silence_samples"]
-        self.silence_threshold = mic_param["silence_threshold"]
-        self.loudest_sound_value = mic_param["loudest_sound_value"]
-        self.device_name = mic_param["device_name"]
-        self.set_threshold = mic_param["set_threshold"]
+        self.audio_format_width = param["audio_format_width"]
+        self.chunk_size = param["chunk_size"]
+        self.total_channels = param["total_channels"]
+        self.audio_rate = param["audio_rate"]
+        self.silence_limit_seconds = param["silence_limit_seconds"]
+        self.previous_audio_seconds = param["previous_audio_seconds"]
+        self.total_silence_samples = param["total_silence_samples"]
+        self.silence_threshold = param["silence_threshold"]
+        self.loudest_sound_value = param["loudest_sound_value"]
+        self.device_name = param["device_name"]
+        self.set_threshold = param["set_threshold"]
         """ Setup the microphone """
         self.p = pyaudio.PyAudio()
         self.audio_format = pyaudio.paInt16  # How can we trasform it in a input parameter?
@@ -191,9 +191,9 @@ def main():
         service_name = "microphone"
         rospy.init_node(service_name + "_node")
         last_event = ""  # TODO: How to get information about last_event from behavior controller?
-        mic_param = rospy.get_param("/mic_param/")
-        ms = MicrophoneService(service_name, mic_param)
-        hardware_reading_server = HarwareReadingServer(name=service_name, service_manager=ms)
+        param = rospy.get_param("/"+service_name+"_param/")
+        s = MicrophoneService(service_name, param)
+        hardware_reading_server = HarwareReadingServer(name=service_name, service_manager=s)
         hardware_reading_server.update_feedback()
         rospy.spin()
     except rospy.ROSInterruptException:
