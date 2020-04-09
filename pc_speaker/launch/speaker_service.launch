@@ -1,0 +1,11 @@
+<!-- This is an example launch file for how a ROS application could use a node -->
+<launch>
+   
+	<arg name="use_microphone" default="true"/>
+  	<group if="$(arg use_microphone)">
+			<rosparam file="$(find pc_microphone)/config/configuration.yaml"/>
+			<node pkg="pc_microphone" type="microphone_service.py" name="pc_microphone" output="screen"/>
+  	</group>
+
+
+</launch>
