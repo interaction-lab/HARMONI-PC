@@ -1,6 +1,5 @@
 # Configuration file for the microphone
 speaker_param:
-  audio_format_width: 2
   chunk_size: 1024
   total_channels: 1
   audio_rate: 16000

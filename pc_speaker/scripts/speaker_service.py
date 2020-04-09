@@ -8,8 +8,8 @@ import math
 import audioop
 import numpy as np
 from collections import deque
-from harmoni_common_lib.child import HarwareReadingServer
-from harmoni_common_lib.service_manager import HarmoniServiceManager
+from harmoni_common_lib.child import HardwareControlServer
+from harmoni_common_lib.service_manager import HarmoniExternalServiceManager
 from audio_common_msgs.msg import AudioData
 
 class Status():
@@ -29,7 +29,9 @@ class SpeakerService(HarmoniExternalServiceManager):
         """ Initialization of variables and speaker parameters """
         rospy.loginfo("SpeakerService initializing")
         self.name = name
-       
+        self.total_channels = param["total_channels"]
+        self.audio_rate = param["audio_rate"]
+        self.chunk_size = param["chunk_size"]
         """ Setup the speaker """
         self.p = pyaudio.PyAudio()
         self.audio_format = pyaudio.paInt16  # How can we trasform it in a input parameter?
@@ -39,8 +41,10 @@ class SpeakerService(HarmoniExternalServiceManager):
         super(SpeakerService, self).__init__(self.status)
         return
 
-    def status_update(self):
-        super(SpeakerService, self).update(self.status)
+    def actuation_update(self, actuation_completed):
+        """Update the actuation status """
+        rospy.loginfo("Update speaker status")
+        super(SpeakerService, self).update(self.status, actuation_completed=actuation_completed)
         return
 
     def test(self):
@@ -49,35 +53,21 @@ class SpeakerService(HarmoniExternalServiceManager):
         success = True
         return success
 
-    def start(self):
-        rospy.loginfo("Start the %s service" % self.name)
-        rate = ""
-        super(SpeakerService, self).start(rate)
-        if self.status == 0:
-            self.status = Status.LISTENING
-            self.status_update()
-            try:
-                self.open_stream()
-                self.listen() # Start the speaker service at the INIT
-            except:
-                self.status = Status.END
-        else:
-            self.status = Status.LISTENING
-        self.status_update()
-        #self.listen()
-
-    def stop(self):
-        rospy.loginfo("Stop the %s service" % self.name)
-        super(SpeakerService, self).stop()
-        self.close_stream()
-        self.status = Status.END
-        self.status_update()
-
-    def pause(self):
-        rospy.loginfo("Pause the %s service" % self.name)
-        super(SpeakerService, self).pause()
-        self.status = Status.NOT_LISTENING
-        self.status_update()
+    def do(self, data):
+        """ Do the speak"""
+        self.status = Status.SPEAKING
+        self.actuation_update(actuation_completed = False)
+        data = super(SpeakerService, self).do(data)
+        try:
+            rospy.loginfo("Writing data for speaker")
+            self.stram.write(data)
+            self.close_stream()
+            self.status = Status.NOT_SPEAKING
+            self.actuation_update(actuation_completed = True)
+        except:
+            self.status = Status.END
+            self.actuation_update(actuation_completed = True)
+        return
 
     def setup_speaker(self):
         """ Setup the speaker """
@@ -87,11 +77,13 @@ class SpeakerService(HarmoniExternalServiceManager):
 
     def open_stream(self):
         """Opening the stream """
-        rospy.loginfo("Opening the audio input stream")
+        rospy.loginfo("Opening the audio output stream")
         self.stream = self.p.open(
+            input = False,
+            output = True,
             format=self.audio_format,
             channels=self.total_channels,
-            rate=self.audio_rate, input=True,
+            rate=self.audio_rate,
             output_device_index=self.output_device_index,
             frames_per_buffer=self.chunk_size
         )
@@ -99,6 +91,7 @@ class SpeakerService(HarmoniExternalServiceManager):
 
     def close_stream(self):
         """Closing the stream """
+        rospy.loginfo("Closing the audio output stream")
         self.stream.stop_stream()
         self.stream.close()
         return

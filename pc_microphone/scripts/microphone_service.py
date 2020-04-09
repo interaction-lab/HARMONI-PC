@@ -63,9 +63,8 @@ class MicrophoneService(HarmoniServiceManager):
         success = True
         return success
 
-    def start(self):
+    def start(self, rate=""):
         rospy.loginfo("Start the %s service" % self.name)
-        rate = ""
         super(MicrophoneService, self).start(rate)
         if self.status == 0:
             self.status = Status.LISTENING
