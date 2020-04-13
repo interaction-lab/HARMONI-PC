@@ -203,16 +203,17 @@ function startFace(
 
           listener = new ROSLIB.Topic({
               ros : ros,
-              name : 'cordial/face/play',
-              messageType : 'cordial_face/FaceRequest'
+              name : 'harmoni/actuating/expressing/face',
+              messageType : 'pc_face/FaceRequest'
           });
           listener.subscribe(get_goal);
 
           is_connected_client = new ROSLIB.Service({
             ros: ros,
-            name: '/cordial/face/is_connected',
+            name: 'harmoni/actuating/face/is_connected',
             serviceType: 'std_srvs/Trigger'
           });
+
           is_connected_client.advertise(function (_, response) {
             console.log('is_connected_client received service request');
             response['success'] = true;

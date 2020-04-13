@@ -1,5 +1,5 @@
 # Configuration file for the microphone
-speaker_param:
-  chunk_size: 1024
-  total_channels: 1
-  audio_rate: 16000
+face_param:
+  min_duration_viseme : 0.05 #s
+  speed_viseme: 10 #ms
+  timer_interval: 0.01 #s
