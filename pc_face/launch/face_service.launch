@@ -1,0 +1,15 @@
+<!-- This is an example launch file for how a ROS application could use a node -->
+<launch>
+    
+    <arg name="web_directory_path" value="$(find pc_face)/web"/>
+    <arg name="port" default="8080"/>
+	<arg name="use_face" default="true"/>
+  	<group if="$(arg use_face)">
+			<rosparam file="$(find pc_face)/config/configuration.yaml"/>
+			<node pkg="pc_face" type="http_server_runner.py" name="face_http_server" output="screen" args="$(arg web_directory_path) $(arg port)" />
+			<node pkg="pc_face" type="face_service.py" name="pc_face" output="screen"/>
+			<include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" />
+  	</group>
+
+
+</launch>
