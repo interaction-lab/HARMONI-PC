@@ -44,7 +44,7 @@ class SpeakerService(HarmoniExternalServiceManager):
     def actuation_update(self, actuation_completed):
         """Update the actuation status """
         rospy.loginfo("Update speaker status")
-        super(SpeakerService, self).update(self.status, actuation_completed=actuation_completed)
+        super(SpeakerService, self).update(status = self.status, actuation_completed=actuation_completed)
         return
 
     def test(self):
