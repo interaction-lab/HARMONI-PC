@@ -4,6 +4,8 @@
 import rospy
 import roslib
 import ast
+import os
+import json
 from pc_face.msg import FaceRequest
 from harmoni_common_lib.child import HardwareControlServer
 from harmoni_common_lib.service_manager import HarmoniExternalServiceManager
@@ -96,43 +98,42 @@ class FaceService(HarmoniExternalServiceManager):
 
     def get_facial_expressions_list(self):
         """ Get facial expression list from the resource file"""
-		facial_expression_list = []
-		face_expression_au = []
-		base_dir = os.path.dirname(__file__)
-		with open(base_dir + '/resource/cordial_face_expression.json', "r") as json_file:
-			data = json.load(json_file)
-			for facial_expression in data:
-				facial_expression_list.append(facial_expression)
-				au_name = str(facial_expression)
-				aus = []
-				for dofs in data[facial_expression]['dofs']:
-					aus.append(str(dofs))
-				for keyframe in data[facial_expression]['keyframes']:
-					au_degrees = keyframe['pose']
-					au_ms = keyframe['time']
-					face_expression_au.append({ "au_name": au_name,
-								"aus": aus, 
-								"au_degrees": au_degrees,
-								"au_ms": au_ms})
+        facial_expression_list = []
+        face_expression_au = []
+        base_dir = os.path.dirname(__file__)
+        with open(base_dir + '/resource/cordial_face_expression.json', "r") as json_file:
+            data = json.load(json_file)
+            for facial_expression in data:
+                facial_expression_list.append(facial_expression)
+                au_name = str(facial_expression)
+                aus = []
+                for dofs in data[facial_expression]['dofs']:
+                    aus.append(str(dofs))
+                for keyframe in data[facial_expression]['keyframes']:
+                    au_degrees = keyframe['pose']
+                    au_ms = keyframe['time']
+                    face_expression_au.append({ "au_name": au_name,
+                                "aus": aus, 
+                                "au_degrees": au_degrees,
+                                "au_ms": au_ms})
         return face_expression_au
 
     def get_valid_face_data(self, data):
         """ Get the validated data of the face"""
-        
         data = ast.literal_eval(data)
         viseme = filter(lambda b: b["id"] in self.visemes, data)
-		facial_expression= filter(lambda b: b["id"] in self.face_expression, data)
+        facial_expression= filter(lambda b: b["id"] in self.face_expression, data)
         ordered_facial_data = sorted(facial_expression, key=lambda face: face["start"])
-		validated_face_expr = []
-		for au in self.face_expression:
-			for fexp in  ordered_facial_data:
-				if au['au_name'] == fexp['id']:
-					validated_face_expr.append(au)
-		for i in range(0,len(viseme_behaviors)-1):
-		        viseme_behaviors[i]["duration"]=viseme_behaviors[i+1]["start"]-viseme_behaviors[i]["start"]
-		viseme_behaviors[-1]["duration"]=self.min_duration_viseme
-		viseme_behaviors=filter(lambda b: b["duration"]>= self.min_duration_viseme, viseme_behaviors)
-		ordered_visemes = sorted(viseme_behaviors, key=lambda b: b["start"])
+        validated_face_expr = []
+        for au in self.face_expression:
+            for fexp in  ordered_facial_data:
+                if au['au_name'] == fexp['id']:
+                    validated_face_expr.append(au)
+        for i in range(0,len(viseme)-1):
+                viseme[i]["duration"]=viseme[i+1]["start"]-viseme[i]["start"]
+        viseme[-1]["duration"]=self.min_duration_viseme
+        viseme_behaviors=filter(lambda b: b["duration"]>= self.min_duration_viseme, viseme)
+        ordered_visemes = sorted(viseme_behaviors, key=lambda b: b["start"])
         return (validated_face_expr, visemes)
 
 def main():
