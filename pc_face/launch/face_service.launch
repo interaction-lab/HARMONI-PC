@@ -7,7 +7,6 @@
   	<group if="$(arg use_face)">
 			<rosparam file="$(find pc_face)/config/configuration.yaml"/>
 			<node pkg="pc_face" type="http_server_runner.py" name="face_http_server" output="screen" args="$(arg web_directory_path) $(arg port)" />
-			<node pkg="pc_face" type="server_to_start_face.py" name="start_face" output="screen"/>
 			<node pkg="pc_face" type="face_service.py" name="pc_face" output="screen"/>
 			<include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" />
   	</group>
