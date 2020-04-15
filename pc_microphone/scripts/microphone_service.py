@@ -12,14 +12,6 @@ from harmoni_common_lib.child import HarwareReadingServer
 from harmoni_common_lib.service_manager import HarmoniServiceManager
 from audio_common_msgs.msg import AudioData
 
-class Status():
-    """ Status of the microphone service """
-    INIT = 0 # init the service
-    LISTENING = 1 # start listen to the voice
-    NOT_LISTENING = 2 # stop listen to the voice
-    END = 3  # terminate the service
-
-
 class MicrophoneService(HarmoniServiceManager):
     """
     Microphone service
@@ -49,12 +41,12 @@ class MicrophoneService(HarmoniServiceManager):
         self.mic_pub = rospy.Publisher("/harmoni/sensing/listening/microphone", AudioData, queue_size=1) # Publishing the voice data
         self.mic_raw_pub = rospy.Publisher("/harmoni/sensing/microphone", AudioData, queue_size=1) # Publishing raw_data
         """Setup the microphone service as server """
-        self.status = Status.INIT 
-        super(MicrophoneService, self).__init__(self.status)
+        self.state = self.State.INIT 
+        super(MicrophoneService, self).__init__(self.state)
         return
 
-    def status_update(self):
-        super(MicrophoneService, self).update(self.status)
+    def state_update(self):
+        super(MicrophoneService, self).update(self.state)
         return
 
     def test(self):
@@ -66,31 +58,31 @@ class MicrophoneService(HarmoniServiceManager):
     def start(self, rate=""):
         rospy.loginfo("Start the %s service" % self.name)
         super(MicrophoneService, self).start(rate)
-        if self.status == 0:
-            self.status = Status.LISTENING
-            self.status_update()
+        if self.state == 0:
+            self.state = self.State.START
+            self.state_update()
             try:
                 self.open_stream()
                 self.listen() # Start the microphone service at the INIT
             except:
-                self.status = Status.END
+                self.state = self.State.END
         else:
-            self.status = Status.LISTENING
-        self.status_update()
+            self.state = self.State.START
+        self.state_update()
         #self.listen()
 
     def stop(self):
         rospy.loginfo("Stop the %s service" % self.name)
         super(MicrophoneService, self).stop()
         self.close_stream()
-        self.status = Status.END
-        self.status_update()
+        self.state = self.State.END
+        self.state_update()
 
     def pause(self):
         rospy.loginfo("Pause the %s service" % self.name)
         super(MicrophoneService, self).pause()
-        self.status = Status.NOT_LISTENING
-        self.status_update()
+        self.state = self.State.STOP
+        self.state_update()
 
     def setup_microphone(self):
         """ Setup the microphone """
@@ -126,12 +118,12 @@ class MicrophoneService(HarmoniServiceManager):
         prev_audio = deque(maxlen=self.previous_audio_seconds * chunks_per_second)
         started = False
         while not rospy.is_shutdown():
-            if self.status != 3:
+            if self.state != 3:
                 latest_audio_data = self.stream.read(self.chunk_size)
                 raw_audio_bitstream = np.fromstring(latest_audio_data, np.uint8)
                 raw_audio = raw_audio_bitstream.tolist()
                 self.mic_raw_pub.publish(raw_audio) # Publishing raw AudioData
-                if self.status == 1:
+                if self.state == 1:
                     sliding_window.append(math.sqrt(abs(audioop.avg(latest_audio_data, self.audio_format_width))))
                     if any([x > self.silence_threshold for x in sliding_window]):
                         if not started:
@@ -141,7 +133,7 @@ class MicrophoneService(HarmoniServiceManager):
                     elif started:
                         rospy.loginfo("Finished detecting")
                         all_audio_data = "".join(prev_audio) + current_audio
-                        self.status = Status.NOT_LISTENING
+                        self.state = self.State.STOP
                         audio_bitstream = np.fromstring(all_audio_data, np.uint8)
                         audio = audio_bitstream.tolist()
                         self.mic_pub.publish(audio)  # Publishing AudioData of voice
@@ -149,7 +141,7 @@ class MicrophoneService(HarmoniServiceManager):
                         sliding_window.clear()
                         prev_audio.clear()
                         current_audio = ""
-                        self.status_update()
+                        self.state_update()
                     else:
                         prev_audio.append(latest_audio_data)
             else:

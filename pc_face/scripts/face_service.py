@@ -11,14 +11,6 @@ from pc_face.msg import FaceRequest
 from harmoni_common_lib.child import HardwareControlServer
 from harmoni_common_lib.service_manager import HarmoniExternalServiceManager
 
-class Status():
-    """ Status of the face service """
-    INIT = 0 # init the service
-    EXPRESSING = 1 # start express
-    NOT_EXPRESSING = 2 # stop express
-    END = 3  # terminate the service
-
-
 class FaceService(HarmoniExternalServiceManager):
     """
     Face service
@@ -36,14 +28,14 @@ class FaceService(HarmoniExternalServiceManager):
         """ Setup the publisher for the face """
         self.face_pub = rospy.Publisher("harmoni/actuating/expressing/face", FaceRequest, queue_size=1)
         """Setup the face service as server """
-        self.status = Status.INIT 
-        super(FaceService, self).__init__(self.status)
+        self.state = self.State.INIT 
+        super(FaceService, self).__init__(self.state)
         return
 
     def actuation_update(self, actuation_completed):
-        """Update the actuation status """
-        rospy.loginfo("Update face status")
-        super(FaceService, self).update(status = self.status, actuation_completed=actuation_completed)
+        """Update the actuation state """
+        rospy.loginfo("Update face state")
+        super(FaceService, self).update(state = self.state, actuation_completed=actuation_completed)
         return
 
     def test(self):
@@ -57,7 +49,7 @@ class FaceService(HarmoniExternalServiceManager):
         data = super(FaceService, self).do(data)
         [valid_face_expression, visemes] = self.get_face_data(data)
         try:
-            self.status = Status.EXPRESSING
+            self.state = self.State.DO_REQUEST
             self.actuation_update(actuation_completed = False)
             if visemes != []:
                 viseme_ids = map(lambda b: b["id"], visemes)
@@ -91,10 +83,10 @@ class FaceService(HarmoniExternalServiceManager):
                 start_time = rospy.Time.now()
                 rospy.loginfo("The last facial expression")
                 rospy.sleep(valid_face_expression[-1]['au_ms'])
-            self.status = Status.NOT_EXPRESSING
+            self.state = self.State.COMPLETE_RESPONSE
             self.actuation_update(actuation_completed = True)
         except:
-            self.status = Status.END
+            self.state = self.State.END
             self.actuation_update(actuation_completed = True)
         return
 

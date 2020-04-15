@@ -12,14 +12,6 @@ from harmoni_common_lib.child import HardwareControlServer
 from harmoni_common_lib.service_manager import HarmoniExternalServiceManager
 from audio_common_msgs.msg import AudioData
 
-class Status():
-    """ Status of the speaker service """
-    INIT = 0 # init the service
-    SPEAKING = 1 # start speak
-    NOT_SPEAKING = 2 # stop speak
-    END = 3  # terminate the service
-
-
 class SpeakerService(HarmoniExternalServiceManager):
     """
     Speaker service
@@ -37,14 +29,14 @@ class SpeakerService(HarmoniExternalServiceManager):
         self.audio_format = pyaudio.paInt16  # How can we trasform it in a input parameter?
         self.stream = None
         """Setup the speaker service as server """
-        self.status = Status.INIT 
-        super(SpeakerService, self).__init__(self.status)
+        self.state = self.State.INIT
+        super(SpeakerService, self).__init__(self.state)
         return
 
     def actuation_update(self, actuation_completed):
-        """Update the actuation status """
-        rospy.loginfo("Update speaker status")
-        super(SpeakerService, self).update(status = self.status, actuation_completed=actuation_completed)
+        """Update the actuation state """
+        rospy.loginfo("Update speaker state")
+        super(SpeakerService, self).update(state = self.state, actuation_completed=actuation_completed)
         return
 
     def test(self):
@@ -55,17 +47,17 @@ class SpeakerService(HarmoniExternalServiceManager):
 
     def do(self, data):
         """ Do the speak"""
-        self.status = Status.SPEAKING
+        self.state = self.State.DO_REQUEST
         self.actuation_update(actuation_completed = False)
         data = super(SpeakerService, self).do(data)
         try:
             rospy.loginfo("Writing data for speaker")
             self.stram.write(data)
             self.close_stream()
-            self.status = Status.NOT_SPEAKING
+            self.state = self.State.COMPLETE_RESPONSE
             self.actuation_update(actuation_completed = True)
         except:
-            self.status = Status.END
+            self.state = self.State.END
             self.actuation_update(actuation_completed = True)
         return
 
