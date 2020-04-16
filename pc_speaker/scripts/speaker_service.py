@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Importing the libraries
 import rospy
@@ -30,17 +30,17 @@ class SpeakerService(HarmoniExternalServiceManager):
         self.stream = None
         """Setup the speaker service as server """
         self.state = self.State.INIT
-        super(SpeakerService, self).__init__(self.state)
+        super().__init__(self.state)
         return
 
     def actuation_update(self, actuation_completed):
         """Update the actuation state """
         rospy.loginfo("Update speaker state")
-        super(SpeakerService, self).update(state = self.state, actuation_completed=actuation_completed)
+        super().update(state = self.state, actuation_completed=actuation_completed)
         return
 
     def test(self):
-        super(SpeakerService, self).test()
+        super().test()
         rospy.loginfo("Test the %s service" % self.name)
         success = True
         return success
@@ -49,7 +49,7 @@ class SpeakerService(HarmoniExternalServiceManager):
         """ Do the speak"""
         self.state = self.State.DO_REQUEST
         self.actuation_update(actuation_completed = False)
-        data = super(SpeakerService, self).do(data)
+        data = super().do(data)
         try:
             rospy.loginfo("Writing data for speaker")
             self.stram.write(data)

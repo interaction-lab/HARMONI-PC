@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 This script takes two arguements: a path to where it should open the http-server and the desired port.

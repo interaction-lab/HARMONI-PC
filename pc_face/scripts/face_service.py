@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Importing the libraries
 import rospy
@@ -29,24 +29,24 @@ class FaceService(HarmoniExternalServiceManager):
         self.face_pub = rospy.Publisher("harmoni/actuating/expressing/face", FaceRequest, queue_size=1)
         """Setup the face service as server """
         self.state = self.State.INIT 
-        super(FaceService, self).__init__(self.state)
+        super().__init__(self.state)
         return
 
     def actuation_update(self, actuation_completed):
         """Update the actuation state """
         rospy.loginfo("Update face state")
-        super(FaceService, self).update(state = self.state, actuation_completed=actuation_completed)
+        super().update(state = self.state, actuation_completed=actuation_completed)
         return
 
     def test(self):
-        super(FaceService, self).test()
+        super().test()
         rospy.loginfo("Test the %s service" % self.name)
         success = True
         return success
 
     def do(self, data):
         """ Do the expression"""
-        data = super(FaceService, self).do(data)
+        data = super().do(data)
         [valid_face_expression, visemes] = self.get_face_data(data)
         try:
             self.state = self.State.DO_REQUEST

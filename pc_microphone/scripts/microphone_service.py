@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Importing the libraries
 import rospy
@@ -42,22 +42,22 @@ class MicrophoneService(HarmoniServiceManager):
         self.mic_raw_pub = rospy.Publisher("/harmoni/sensing/microphone", AudioData, queue_size=1) # Publishing raw_data
         """Setup the microphone service as server """
         self.state = self.State.INIT 
-        super(MicrophoneService, self).__init__(self.state)
+        super().__init__(self.state)
         return
 
     def state_update(self):
-        super(MicrophoneService, self).update(self.state)
+        super().update(self.state)
         return
 
     def test(self):
-        super(MicrophoneService, self).test()
+        super().test()
         rospy.loginfo("Test the %s service" % self.name)
         success = True
         return success
 
     def start(self, rate=""):
         rospy.loginfo("Start the %s service" % self.name)
-        super(MicrophoneService, self).start(rate)
+        super().start(rate)
         if self.state == 0:
             self.state = self.State.START
             self.state_update()
@@ -73,14 +73,14 @@ class MicrophoneService(HarmoniServiceManager):
 
     def stop(self):
         rospy.loginfo("Stop the %s service" % self.name)
-        super(MicrophoneService, self).stop()
+        super().stop()
         self.close_stream()
         self.state = self.State.END
         self.state_update()
 
     def pause(self):
         rospy.loginfo("Pause the %s service" % self.name)
-        super(MicrophoneService, self).pause()
+        super().pause()
         self.state = self.State.STOP
         self.state_update()
 

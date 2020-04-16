@@ -2,7 +2,7 @@
 Lib dependencies:
 - pyaudio:
     ```
-    sudo apt-get install python-pyaudio
+    sudo apt-get install python3-pyaudio
     ```
 
 # Speaker Service Parameters:

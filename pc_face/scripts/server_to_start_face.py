@@ -1,4 +1,4 @@
-#!/usr/bin/env python                                                           
+#!/usr/bin/env python3                                                          
 import rospy
 import subprocess
 from std_srvs.srv import Trigger, TriggerResponse

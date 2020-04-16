@@ -2,7 +2,11 @@
 Lib dependencies:
 - pyaudio:
     ```
-    sudo apt-get install python-pyaudio
+    sudo apt-get install python3-pyaudio
+    ```
+- numpy
+    ```
+    sudo apt-get install python3-numpy
     ```
 - audio_common_msgs:
     ```
