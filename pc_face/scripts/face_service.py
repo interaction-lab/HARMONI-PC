@@ -52,8 +52,8 @@ class FaceService(HarmoniExternalServiceManager):
             self.state = self.State.DO_REQUEST
             self.actuation_update(actuation_completed = False)
             if visemes != []:
-                viseme_ids = map(lambda b: b["id"], visemes)
-                viseme_times = map(lambda b: b["start"], visemes)
+                viseme_ids = list(map(lambda b: b["id"], visemes))
+                viseme_times = list(map(lambda b: b["start"], visemes))
                 self.face_request = FaceRequest(visemes=viseme_ids, viseme_ms=self.speed_viseme, times=viseme_times)
                 rospy.loginfo("The viseme request is %s" %self.face_request)
                 t = Timer(self.timer_interval, self.send_face_request)
@@ -67,14 +67,14 @@ class FaceService(HarmoniExternalServiceManager):
                 if len(valid_face_expression) > 1:
                     for ind, f in range(0, len(validated_face_expr)-1):
                         rospy.loginfo("The valid expression is %s" %f)
-                        aus = map(lambda s: s[2:], f['aus'])
+                        aus = list(map(lambda s: s[2:], f['aus']))
                         au_ms = f['au_ms']*1000
                         self.face_request = FaceRequest(aus=aus, au_degrees=f['au_degrees'], au_ms=au_ms)
                         rospy.loginfo("The face expression request is %s" %self.face_request)
                         t = Timer(self.timer_interval, self.send_face_request)
                         t.start()
                         start_time = rospy.Time.now()
-                aus = map(lambda s: s[2:], valid_face_expression[-1]['aus'])
+                aus = list(map(lambda s: s[2:], valid_face_expression[-1]['aus']))
                 au_ms =  valid_face_expression[-1]['au_ms']*1000
                 self.face_request = FaceRequest(aus=aus, au_degrees= valid_face_expression[-1]['au_degrees'], au_ms=au_ms)
                 rospy.logdebug("The face expression request is %s" %self.face_request)
@@ -132,19 +132,19 @@ class FaceService(HarmoniExternalServiceManager):
         """ Get the validated data of the face"""
         rospy.logdebug("The face expressions available are %s" %self.face_expression)
         data = ast.literal_eval(data)
-        viseme = filter(lambda b: b["id"] in self.visemes, data)
-        facial_expression= filter(lambda b: b["id"] in self.face_expression_names, data)
+        viseme = list(filter(lambda b: b["id"] in self.visemes, data))
+        facial_expression= list(filter(lambda b: b["id"] in self.face_expression_names, data))
         rospy.logdebug("The facial expressions are %s" %facial_expression)
-        ordered_facial_data = sorted(facial_expression, key=lambda face: face["start"])
+        ordered_facial_data = list(sorted(facial_expression, key=lambda face: face["start"]))
         rospy.logdebug("The list of au is %s" %self.face_expression)
         validated_face_expr = []
         for fexp in ordered_facial_data:
             validated_face_expr.append(self.face_expression[fexp["id"]])
-        for i in range(0,len(viseme)-1):
+        for i in range(0, len(viseme)-1):
                 viseme[i]["duration"]=viseme[i+1]["start"]-viseme[i]["start"]
         viseme[-1]["duration"]=self.min_duration_viseme
-        viseme_behaviors=filter(lambda b: b["duration"]>= self.min_duration_viseme, viseme)
-        ordered_visemes = sorted(viseme_behaviors, key=lambda b: b["start"])
+        viseme_behaviors=list(filter(lambda b: b["duration"]>= self.min_duration_viseme, viseme))
+        ordered_visemes = list(sorted(viseme_behaviors, key=lambda b: b["start"]))
         rospy.logdebug("The facial expressions are %s" %validated_face_expr)
         return (validated_face_expr, ordered_visemes)
 
