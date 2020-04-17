@@ -1,18 +1,3 @@
-# Dependencies
-Lib dependencies:
-- pyaudio:
-    ```
-    sudo apt-get install python3-pyaudio
-    ```
-- numpy
-    ```
-    sudo apt-get install python3-numpy
-    ```
-- audio_common_msgs:
-    ```
-    sudo apt-get install audio-common-msgs
-    ```
-
 # Microphone Service Parameters:
 Parameters input for the microphone service: 
 
