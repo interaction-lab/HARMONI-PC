@@ -59,31 +59,37 @@ class MicrophoneService(HarmoniServiceManager):
     def start(self, rate=""):
         rospy.loginfo("Start the %s service" % self.name)
         super().start(rate)
-        if self.state == 0:
+        if self.state == State.INIT:
             self.state = State.START
             self.state_update()
             try:
                 self.open_stream()
                 self.listen() # Start the microphone service at the INIT
             except:
-                self.state = State.END
+                self.state = State.FAILED
         else:
             self.state = State.START
         self.state_update()
-        #self.listen()
+        return
 
     def stop(self):
         rospy.loginfo("Stop the %s service" % self.name)
         super().stop()
-        self.close_stream()
-        self.state = State.END
-        self.state_update()
+        try:
+            self.close_stream()
+            self.state = State.SUCCESS
+            self.state_update()
+        except:
+            self.state = State.FAILED
+            self.state_update()
+        return
 
     def pause(self):
         rospy.loginfo("Pause the %s service" % self.name)
         super().pause()
-        self.state = State.STOP
+        self.state = State.SUCCESS
         self.state_update()
+        return
 
     def setup_microphone(self):
         """ Setup the microphone """
@@ -134,7 +140,7 @@ class MicrophoneService(HarmoniServiceManager):
                     elif started:
                         rospy.loginfo("Finished detecting")
                         all_audio_data = "".join(prev_audio) + current_audio
-                        self.state = State.STOP
+                        self.state = State.SUCCESS
                         audio_bitstream = np.fromstring(all_audio_data, np.uint8)
                         audio = audio_bitstream.tolist()
                         self.mic_pub.publish(audio)  # Publishing AudioData of voice

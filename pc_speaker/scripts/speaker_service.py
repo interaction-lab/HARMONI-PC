@@ -52,13 +52,14 @@ class SpeakerService(HarmoniExternalServiceManager):
         self.actuation_update(actuation_completed = False)
         data = super().do(data)
         try:
+            self.open_stream()
             rospy.loginfo("Writing data for speaker")
             self.stram.write(data)
             self.close_stream()
-            self.state = State.RESPONSE
+            self.state = State.SUCCESS
             self.actuation_update(actuation_completed = True)
         except:
-            self.state = State.END
+            self.state = State.FAILED
             self.actuation_update(actuation_completed = True)
         return
 

@@ -84,10 +84,10 @@ class FaceService(HarmoniExternalServiceManager):
                 start_time = rospy.Time.now()
                 rospy.loginfo("The last facial expression")
                 rospy.sleep(valid_face_expression[-1]['au_ms'])
-            self.state = State.RESPONSE
+            self.state = State.SUCCESS
             self.actuation_update(actuation_completed = True)
         except:
-            self.state = State.END
+            self.state = State.FAILED
             self.actuation_update(actuation_completed = True)
         return
 
