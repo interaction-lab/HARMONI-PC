@@ -8,6 +8,7 @@ import os
 import json
 from threading import Timer
 from pc_face.msg import FaceRequest
+from harmoni_common_lib.constants import State
 from harmoni_common_lib.child import HardwareControlServer
 from harmoni_common_lib.service_manager import HarmoniExternalServiceManager
 
@@ -28,7 +29,7 @@ class FaceService(HarmoniExternalServiceManager):
         """ Setup the publisher for the face """
         self.face_pub = rospy.Publisher("harmoni/actuating/expressing/face", FaceRequest, queue_size=1)
         """Setup the face service as server """
-        self.state = self.State.INIT 
+        self.state = State.INIT 
         super().__init__(self.state)
         return
 
@@ -49,7 +50,7 @@ class FaceService(HarmoniExternalServiceManager):
         data = super().do(data)
         [valid_face_expression, visemes] = self.get_face_data(data)
         try:
-            self.state = self.State.DO_REQUEST
+            self.state = State.REQUEST
             self.actuation_update(actuation_completed = False)
             if visemes != []:
                 viseme_ids = list(map(lambda b: b["id"], visemes))
@@ -83,10 +84,10 @@ class FaceService(HarmoniExternalServiceManager):
                 start_time = rospy.Time.now()
                 rospy.loginfo("The last facial expression")
                 rospy.sleep(valid_face_expression[-1]['au_ms'])
-            self.state = self.State.COMPLETE_RESPONSE
+            self.state = State.RESPONSE
             self.actuation_update(actuation_completed = True)
         except:
-            self.state = self.State.END
+            self.state = State.END
             self.actuation_update(actuation_completed = True)
         return
 
