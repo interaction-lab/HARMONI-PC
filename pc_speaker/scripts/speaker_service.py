@@ -7,6 +7,7 @@ import pyaudio
 import math
 import audioop
 import numpy as np
+import ast
 from collections import deque
 from harmoni_common_lib.constants import State
 from harmoni_common_lib.child import HardwareControlServer
@@ -25,11 +26,13 @@ class SpeakerService(HarmoniExternalServiceManager):
         self.total_channels = param["total_channels"]
         self.audio_rate = param["audio_rate"]
         self.chunk_size = param["chunk_size"]
+        self.device_name = param["device_name"]
         """ Setup the speaker """
         self.p = pyaudio.PyAudio()
         self.audio_format = pyaudio.paInt16  # How can we trasform it in a input parameter?
         self.stream = None
         """Setup the speaker service as server """
+        self.setup_speaker()
         self.state = State.INIT
         super().__init__(self.state)
         return
@@ -51,10 +54,11 @@ class SpeakerService(HarmoniExternalServiceManager):
         self.state = State.REQUEST
         self.actuation_update(actuation_completed = False)
         data = super().do(data)
+        data = ast.literal_eval(data)
         try:
             self.open_stream()
             rospy.loginfo("Writing data for speaker")
-            self.stram.write(data)
+            self.stream.write(data)
             self.close_stream()
             self.state = State.SUCCESS
             self.actuation_update(actuation_completed = True)
@@ -72,15 +76,13 @@ class SpeakerService(HarmoniExternalServiceManager):
     def open_stream(self):
         """Opening the stream """
         rospy.loginfo("Opening the audio output stream")
-        self.stream = self.p.open(
-            input = False,
-            output = True,
-            format=self.audio_format,
+        self.stream = self.p.open(format=self.audio_format,
             channels=self.total_channels,
             rate=self.audio_rate,
+            input = False,
+            output = True,
             output_device_index=self.output_device_index,
-            frames_per_buffer=self.chunk_size
-        )
+            frames_per_buffer=self.chunk_size)
         return
 
     def close_stream(self):
