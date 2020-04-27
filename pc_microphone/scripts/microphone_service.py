@@ -143,12 +143,10 @@ class MicrophoneService(HarmoniServiceManager):
                         rospy.loginfo("Finished detecting")
                         all_audio_data = b"".join(prev_audio) + current_audio
                         self.state = State.SUCCESS
-                        print("State Success")
                         audio_bitstream = np.fromstring(all_audio_data, np.uint8)
                         audio = audio_bitstream.tolist()
-                        print("Publish data")
+                        rospy.loginfo("Publish listening data")
                         self.mic_pub.publish(audio)  # Publishing AudioData of voice
-                        print("Clear window")
                         started = False
                         sliding_window.clear()
                         prev_audio.clear()
