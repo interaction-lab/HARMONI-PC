@@ -62,11 +62,11 @@ class MicrophoneService(HarmoniServiceManager):
         if self.state == State.INIT:
             self.state = State.START
             self.state_update()
-            #try:
-            self.open_stream()
-            self.listen() # Start the microphone service at the INIT
-            #except:
-            #    self.state = State.FAILED
+            try:
+                self.open_stream()
+                self.listen() # Start the microphone service at the INIT
+            except:
+                self.state = State.FAILED
         else:
             self.state = State.START
         self.state_update()
