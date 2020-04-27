@@ -125,8 +125,8 @@ class MicrophoneService(HarmoniServiceManager):
         prev_audio = deque(maxlen=self.previous_audio_seconds * chunks_per_second)
         started = False
         while not rospy.is_shutdown():
-            if self.state != State.END:
-                latest_audio_data = self.stream.read(self.chunk_size)
+            if self.state != State.FAILED:
+                latest_audio_data = self.stream.read(self.chunk_size, exception_on_overflow = False)
                 raw_audio_bitstream = np.fromstring(latest_audio_data, np.uint8)
                 raw_audio = raw_audio_bitstream.tolist()
                 self.mic_raw_pub.publish(raw_audio) # Publishing raw AudioData
@@ -136,7 +136,9 @@ class MicrophoneService(HarmoniServiceManager):
                         if not started:
                             rospy.loginfo("Sound detected")
                             started = True
+                        print("Current audio append")
                         current_audio += latest_audio_data
+                        print("End append")
                     elif started:
                         rospy.loginfo("Finished detecting")
                         all_audio_data = "".join(prev_audio) + current_audio
@@ -152,6 +154,7 @@ class MicrophoneService(HarmoniServiceManager):
                     else:
                         prev_audio.append(latest_audio_data)
             else:
+                rospy.loginfo("Break the while")
                 break
         return
 
