@@ -8,7 +8,7 @@
 			<rosparam file="$(find pc_face)/config/configuration.yaml"/>
 			<node pkg="pc_face" type="http_server_runner.py" name="face_http_server" output="screen" args="$(arg web_directory_path) $(arg port)" />
 			<node pkg="pc_face" type="face_service.py" name="pc_face" output="screen"/>
-			<include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" />
+			<!--<include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" />-->
   	</group>
 
 
