@@ -1,5 +1,5 @@
 # Configuration file for the microphone
-speaker_param:
+pc_speaker_param:
   chunk_size: 512
   total_channels: 1
   audio_rate: 22050

@@ -106,7 +106,7 @@ class SpeakerService(HarmoniExternalServiceManager):
 
 def main():
     try:
-        service_name = "speaker"
+        service_name = "pc_speaker"
         rospy.init_node(service_name + "_node")
         last_event = ""  # TODO: How to get information about last_event from behavior controller?
         param = rospy.get_param("/"+service_name+"_param/")

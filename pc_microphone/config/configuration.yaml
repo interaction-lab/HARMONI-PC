@@ -1,5 +1,5 @@
 # Configuration file for the microphone
-microphone_param:
+pc_microphone_param:
   audio_format_width: 2
   chunk_size: 1024
   total_channels: 1

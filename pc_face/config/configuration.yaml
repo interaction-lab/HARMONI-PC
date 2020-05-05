@@ -1,5 +1,5 @@
 # Configuration file for the microphone
-face_param:
+pc_face_param:
   min_duration_viseme : 0.05 #s
   speed_viseme: 10 #ms
   timer_interval: 0.01 #s
