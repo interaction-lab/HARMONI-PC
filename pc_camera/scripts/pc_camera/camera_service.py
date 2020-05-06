@@ -106,7 +106,7 @@ class CameraService(HarmoniServiceManager):
             image = self.cv_bridge.cv2_to_imgmsg(frame, self.video_format)
             self._video_pub.publish(image)
             if self.show:
-                cv2.imgshow("PcCameraVideo", frame)
+                cv2.imshow("PcCameraVideo", frame)
             if cv2.waitKey(1) and (0xFF == ord('x')) and self.show:
                 break
         return
