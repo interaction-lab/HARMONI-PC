@@ -22,6 +22,7 @@ class Status():
     NOT_LISTENING = 2  # stop listen to the voice
     END = 3  # terminate the service
 
+
 class MicrophoneService(HarmoniServiceManager):
     """
     Microphone service
@@ -48,10 +49,10 @@ class MicrophoneService(HarmoniServiceManager):
         self.stream = None
         self.setup_microphone()
         """Init the publisher """
-        self.mic_pub = rospy.Publisher("/harmoni/sensing/listening/microphone", AudioData, queue_size=1) # Publishing the voice data
-        self.mic_raw_pub = rospy.Publisher("/harmoni/sensing/microphone", AudioData, queue_size=1) # Publishing raw_data
+        self.mic_pub = rospy.Publisher("/harmoni/sensing/listening/microphone", AudioData, queue_size=1)  # Publishing the voice data
+        self.mic_raw_pub = rospy.Publisher("/harmoni/sensing/microphone", AudioData, queue_size=1)  # Publishing raw_data
         """Setup the microphone service as server """
-        self.state = State.INIT 
+        self.state = State.INIT
         super().__init__(self.state)
         return
 
@@ -74,7 +75,7 @@ class MicrophoneService(HarmoniServiceManager):
             self.state_update()
             try:
                 self.open_stream()
-                self.listen() # Start the microphone service at the INIT
+                self.listen()  # Start the microphone service at the INIT
             except:
                 self.state = State.FAILED
         else:
@@ -218,13 +219,13 @@ def main():
         service_name = "microphone"
         rospy.init_node(service_name + "_node")
         last_event = ""  # TODO: How to get information about last_event from behavior controller?
-        param = rospy.get_param("/"+service_name+"_param/")
+        param = rospy.get_param("/" + service_name + "_param/")
         s = MicrophoneService(service_name, param)
-        s.start()
         hardware_reading_server = HarwareReadingServer(name=service_name, service_manager=s)
         hardware_reading_server.update_feedback()
         if args[1]:
-            rospy.spin()
+            s.start()
+        rospy.spin()
     except rospy.ROSInterruptException:
         pass
 
