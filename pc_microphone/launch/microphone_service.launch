@@ -5,7 +5,7 @@
   	<group if="$(arg use_microphone)">
 			<rosparam file="$(find pc_microphone)/config/configuration.yaml"/>
 			<node pkg="pc_microphone" type="microphone_service.py" name="pc_microphone" output="screen"/>
-  			<node pkg="pc_microphone" type="microphone_test.py" name="pc_test_microphone" output="screen"/>
+  			<!--<node pkg="pc_microphone" type="microphone_test.py" name="pc_test_microphone" output="screen"/>-->
 	  </group>
 
 
