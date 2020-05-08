@@ -3,6 +3,9 @@
 # Importing the libraries
 import rospy
 import roslib
+import sys
+sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
+sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 import cv2 
 from cv_bridge import CvBridge, CvBridgeError
 from harmoni_common_lib.constants import State
