@@ -116,6 +116,7 @@ class CameraService(HarmoniServiceManager):
 
 
 def main():
+    args = sys.argv
     try:
         service_name = "pc_camera"
         rospy.init_node(service_name + "_node")
@@ -123,6 +124,8 @@ def main():
         param = rospy.get_param("/"+service_name+"_param/")
         s = CameraService(service_name, param)
         hardware_reading_server = HarwareReadingServer(name=service_name, service_manager=s)
+        if eval(args[1]):
+            s.start()
         hardware_reading_server.update_feedback()
         rospy.spin()
     except rospy.ROSInterruptException:

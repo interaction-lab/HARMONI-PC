@@ -2,9 +2,10 @@
 <launch>
    
 	<arg name="use_camera" default="true"/>
+	<arg name="start_on_startup" default="False"/>
   	<group if="$(arg use_camera)">
 			<rosparam file="$(find pc_camera)/config/configuration.yaml"/>
-			<node pkg="pc_camera" type="camera_service.py" name="pc_camera" output="screen"/>
+			<node pkg="pc_camera" type="camera_service.py" name="pc_camera" output="screen" args="$(arg start_on_startup)" />
   	</group>
 
 

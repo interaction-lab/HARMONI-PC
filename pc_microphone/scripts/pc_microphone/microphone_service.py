@@ -222,7 +222,7 @@ def main():
         param = rospy.get_param("/" + service_name + "_param/")
         s = MicrophoneService(service_name, param)
         hardware_reading_server = HarwareReadingServer(name=service_name, service_manager=s)
-        if args[1]:
+        if eval(args[1]):
             s.start()
         hardware_reading_server.update_feedback()
         rospy.spin()
