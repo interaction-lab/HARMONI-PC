@@ -152,7 +152,7 @@ class MicrophoneService(HarmoniServiceManager):
                         rospy.loginfo("Noises" + print_window + str(maximum))
                     if any([x > self.silence_threshold for x in sliding_window]):
                         if not started:
-                            rospy.loginfo("Sound detected")
+                            rospy.loginfo("Sound detected...")
                             started = True
                         current_audio += latest_audio_data
                     elif started:
@@ -167,7 +167,7 @@ class MicrophoneService(HarmoniServiceManager):
                         sliding_window.clear()
                         prev_audio.clear()
                         current_audio = b""
-                        rospy.loginfo("Detection sent. Listening")
+                        rospy.loginfo("Detection sent. Waiting for new audio...")
                         self.state_update()
                         self.state = State.START
 
@@ -195,7 +195,7 @@ class MicrophoneService(HarmoniServiceManager):
     def determine_silence_threshold(self, mode):
         """Determine silence threshold from the mic or setting a constant value """
         loudest_sound_cohort_size = 0.2
-        silence_threshold_multiplier = 1.6
+        silence_threshold_multiplier = 1.5
         if mode == "default":
             self.open_stream()
             tss = self.total_silence_samples
@@ -222,9 +222,9 @@ def main():
         param = rospy.get_param("/" + service_name + "_param/")
         s = MicrophoneService(service_name, param)
         hardware_reading_server = HarwareReadingServer(name=service_name, service_manager=s)
-        hardware_reading_server.update_feedback()
         if args[1]:
             s.start()
+        hardware_reading_server.update_feedback()
         rospy.spin()
     except rospy.ROSInterruptException:
         pass

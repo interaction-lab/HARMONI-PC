@@ -30,7 +30,7 @@ def is_int(value):
 DIR_IDX = 1
 PORT_IDX = 2
 if __name__ == '__main__':
-
+    rospy.init_node("http_server_runner")
     args = sys.argv
     if os.path.exists(args[DIR_IDX]):
         directory = args[DIR_IDX]
@@ -45,6 +45,7 @@ if __name__ == '__main__':
 
     p = subprocess.Popen(command)
     atexit.register(p.terminate)
-
+    
     while not rospy.is_shutdown():
         rospy.sleep(1)
+    # rospy.spin()
