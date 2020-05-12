@@ -9,7 +9,7 @@ import audioop
 import numpy as np
 import ast
 from collections import deque
-from harmoni_common_lib.constants import State
+from harmoni_common_lib.constants import State, RouterActuator
 from harmoni_common_lib.child import HardwareControlServer
 from harmoni_common_lib.service_manager import HarmoniExternalServiceManager
 from audio_common_msgs.msg import AudioData
@@ -106,7 +106,7 @@ class SpeakerService(HarmoniExternalServiceManager):
 
 def main():
     try:
-        service_name = "pc_speaker"
+        service_name = "pc_" + RouterActuator.SPEAKER.value
         rospy.init_node(service_name + "_node")
         last_event = ""  # TODO: How to get information about last_event from behavior controller?
         param = rospy.get_param("/"+service_name+"_param/")

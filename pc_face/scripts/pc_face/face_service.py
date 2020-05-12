@@ -8,7 +8,7 @@ import os
 import json
 from threading import Timer
 from pc_face.msg import FaceRequest
-from harmoni_common_lib.constants import State
+from harmoni_common_lib.constants import State, RouterActuator
 from harmoni_common_lib.child import HardwareControlServer
 from harmoni_common_lib.service_manager import HarmoniExternalServiceManager
 
@@ -151,7 +151,7 @@ class FaceService(HarmoniExternalServiceManager):
 
 def main():
     try:
-        service_name = "pc_face"
+        service_name = "pc_" + RouterActuator.FACE.value
         rospy.init_node(service_name + "_node")
         last_event = ""  # TODO: How to get information about last_event from behavior controller?
         param = rospy.get_param("/"+service_name+"_param/")

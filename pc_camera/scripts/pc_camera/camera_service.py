@@ -8,7 +8,7 @@ sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
 sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 import cv2 
 from cv_bridge import CvBridge, CvBridgeError
-from harmoni_common_lib.constants import State
+from harmoni_common_lib.constants import State, RouterSensor
 from harmoni_common_lib.child import HarwareReadingServer
 from harmoni_common_lib.service_manager import HarmoniServiceManager
 from sensor_msgs.msg import Image
@@ -118,7 +118,7 @@ class CameraService(HarmoniServiceManager):
 def main():
     args = sys.argv
     try:
-        service_name = "pc_camera"
+        service_name = "pc_" + RouterSensor.CAMERA.value
         rospy.init_node(service_name + "_node")
         last_event = ""  # TODO: How to get information about last_event from behavior controller?
         param = rospy.get_param("/"+service_name+"_param/")
