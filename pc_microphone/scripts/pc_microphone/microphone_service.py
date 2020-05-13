@@ -9,7 +9,7 @@ import math
 import audioop
 import numpy as np
 from collections import deque
-from harmoni_common_lib.constants import State, RouterSensor
+from harmoni_common_lib.constants import State, RouterSensor, HelperFunctions
 from harmoni_common_lib.child import HarwareReadingServer
 from harmoni_common_lib.service_manager import HarmoniServiceManager
 from audio_common_msgs.msg import AudioData
@@ -212,19 +212,24 @@ class MicrophoneService(HarmoniServiceManager):
         rospy.loginfo("Silence threshold set to " + str(self.silence_threshold))
         return
 
-
 def main():
     args = sys.argv
     try:
-        service_name = "pc_" + RouterSensor.MICROPHONE.value
+        service_name = RouterSensor.MICROPHONE.value
         rospy.init_node(service_name + "_node")
         last_event = ""  # TODO: How to get information about last_event from behavior controller?
-        param = rospy.get_param("/" + service_name + "_param/")
-        s = MicrophoneService(service_name, param)
-        hardware_reading_server = HarwareReadingServer(name=service_name, service_manager=s)
-        if eval(args[1]):
-            s.start()
-        hardware_reading_server.update_feedback()
+        list_service_names = HelperFunctions.get_child_list(service_name)
+        service_server_list = []
+        for service in list_service_names:
+            print(service)
+            service_id = HelperFunctions.get_child_id(service)
+            param = rospy.get_param("/"+service_id+"_param/")
+            s = MicrophoneService(service, param)
+            service_server_list.append(HarwareReadingServer(name=service, service_manager=s))
+            if eval(args[1]): #FIX IT
+                s.start()        
+        for server in service_server_list:
+            server.update_feedback()
         rospy.spin()
     except rospy.ROSInterruptException:
         pass

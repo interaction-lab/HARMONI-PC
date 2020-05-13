@@ -4,7 +4,7 @@ import subprocess
 from std_srvs.srv import Trigger, TriggerResponse
 import os
 
-web_param = rospy.get_param("/web_param/")
+web_param = rospy.get_param("/def_param/")
 
 def callback_srv(data):
     #os.system("pkill luakit")

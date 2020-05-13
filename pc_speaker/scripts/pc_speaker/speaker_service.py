@@ -9,7 +9,7 @@ import audioop
 import numpy as np
 import ast
 from collections import deque
-from harmoni_common_lib.constants import State, RouterActuator
+from harmoni_common_lib.constants import State, RouterActuator, HelperFunctions
 from harmoni_common_lib.child import HardwareControlServer
 from harmoni_common_lib.service_manager import HarmoniExternalServiceManager
 from audio_common_msgs.msg import AudioData
@@ -106,13 +106,29 @@ class SpeakerService(HarmoniExternalServiceManager):
 
 def main():
     try:
-        service_name = "pc_" + RouterActuator.SPEAKER.value
+        service_name = RouterSensor.CAMERA.value
         rospy.init_node(service_name + "_node")
         last_event = ""  # TODO: How to get information about last_event from behavior controller?
-        param = rospy.get_param("/"+service_name+"_param/")
-        s = SpeakerService(service_name, param)
-        hardware_control_server = HardwareControlServer(name=service_name, service_manager=s)
-        hardware_control_server.update_feedback()
+       
+        rospy.spin()
+    except rospy.ROSInterruptException:
+        pass
+
+def main():
+    try:
+        service_name = RouterActuator.SPEAKER.value
+        rospy.init_node(service_name + "_node")
+        last_event = ""  # TODO: How to get information about last_event from behavior controller?
+        list_service_names = HelperFunctions.get_child_list(service_name)
+        service_server_list = []
+        for service in list_service_names:
+            print(service)
+            service_id = HelperFunctions.get_child_id(service)
+            param = rospy.get_param("/"+service_id+"_param/")
+            s = SpeakerService(service, param)
+            service_server_list.append(HardwareControlServer(name=service, service_manager=s))
+        for server in service_server_list:
+            server.update_feedback()
         rospy.spin()
     except rospy.ROSInterruptException:
         pass

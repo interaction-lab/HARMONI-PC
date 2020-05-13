@@ -47,9 +47,10 @@ class MicrophoneTest():
 def main():
     try:
         service_name = "microphone"
+        id_service = "def"
         rospy.init_node(service_name + "_test_node")
         last_event = ""  # TODO: How to get information about last_event from behavior controller?
-        param = rospy.get_param("/"+service_name+"_param/")
+        param = rospy.get_param("/"+id_service+"_param/")
         s = MicrophoneTest(service_name, param)
         rospy.spin()
     except rospy.ROSInterruptException:
