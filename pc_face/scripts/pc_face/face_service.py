@@ -27,7 +27,7 @@ class FaceService(HarmoniExternalServiceManager):
         """ Setup the face """
         self.setup_face()
         """ Setup the publisher for the face """
-        self.face_pub = rospy.Publisher("harmoni/actuating/expressing/face", FaceRequest, queue_size=1)
+        self.face_pub = rospy.Publisher("/harmoni/actuating/expressing/face", FaceRequest, queue_size=1)
         """Setup the face service as server """
         self.state = State.INIT 
         super().__init__(self.state)
