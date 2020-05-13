@@ -210,7 +210,7 @@ function startFace(
 
           is_connected_client = new ROSLIB.Service({
             ros: ros,
-            name: 'harmoni/actuating/face/is_connected',
+            name: '/harmoni/actuating/face/is_connected',
             serviceType: 'std_srvs/Trigger'
           });
 

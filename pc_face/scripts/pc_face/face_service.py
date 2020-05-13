@@ -95,7 +95,7 @@ class FaceService(HarmoniExternalServiceManager):
         """ Setup the face """
         rospy.loginfo("Setting up the %s" % self.name)
         rospy.loginfo("Checking that face is connected to ROS websocket")
-        rospy.wait_for_service("harmoni/actuating/face/is_connected")
+        rospy.wait_for_service("/harmoni/actuating/face/is_connected")
         rospy.loginfo("Done, face is connected to ROS websocket")
         [self.face_expression, self.face_expression_names] = self.get_facial_expressions_list()
         self.visemes =  ["BILABIAL","LABIODENTAL","INTERDENTAL","DENTAL_ALVEOLAR","POSTALVEOLAR","VELAR_GLOTTAL","CLOSE_FRONT_VOWEL","OPEN_FRONT_VOWEL","MID_CENTRAL_VOWEL","OPEN_BACK_VOWEL","CLOSE_BACK_VOWEL", 'IDLE']
