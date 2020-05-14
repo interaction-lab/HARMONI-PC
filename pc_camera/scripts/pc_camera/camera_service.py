@@ -115,7 +115,9 @@ class CameraService(HarmoniServiceManager):
         return
 
 def main():
-    args = sys.argv
+    test = rospy.get_param("/test/")
+    input_test = rospy.get_param("/input_test/")
+    id_test = rospy.get_param("/id_test/")
     try:
         service_name = RouterSensor.CAMERA.value
         rospy.init_node(service_name + "_node")
@@ -128,10 +130,12 @@ def main():
             param = rospy.get_param("/"+service_id+"_param/")
             s = CameraService(service, param)
             service_server_list.append(HarwareReadingServer(name=service, service_manager=s))
-            if eval(args[1]): #FIX IT 
+            if test and (service_id == id_test):
+                rospy.loginfo("Testing the %s" %(service))
                 s.start()
-        for server in service_server_list:
-            server.update_feedback()
+        if not test:
+            for server in service_server_list:
+                server.update_feedback()
         rospy.spin()
     except rospy.ROSInterruptException:
         pass

@@ -150,6 +150,9 @@ class FaceService(HarmoniExternalServiceManager):
         return (validated_face_expr, ordered_visemes)
 
 def main():
+    test = rospy.get_param("/test/")
+    input_test = rospy.get_param("/input_test/")
+    id_test = rospy.get_param("/id_test/")
     try:
         service_name = RouterActuator.FACE.value
         rospy.init_node(service_name + "_node")
@@ -162,8 +165,12 @@ def main():
             param = rospy.get_param("/"+service_id+"_param/")
             s = FaceService(service, param)
             service_server_list.append(HardwareControlServer(name=service, service_manager=s))
-        for server in service_server_list:
-            server.update_feedback()
+        if test and (service_id == id_test):
+                rospy.loginfo("Testing the %s" %(service))
+                s.do(input_test)
+        if not test:
+            for server in service_server_list:
+                server.update_feedback()
         rospy.spin()
     except rospy.ROSInterruptException:
         pass
