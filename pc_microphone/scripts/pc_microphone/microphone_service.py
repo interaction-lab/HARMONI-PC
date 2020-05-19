@@ -170,7 +170,6 @@ class MicrophoneService(HarmoniServiceManager):
                         rospy.loginfo("Detection sent. Waiting for new audio...")
                         self.state_update()
                         self.state = State.START
-
                     else:
                         prev_audio.append(latest_audio_data)
                 else:
@@ -195,7 +194,7 @@ class MicrophoneService(HarmoniServiceManager):
     def determine_silence_threshold(self, mode):
         """Determine silence threshold from the mic or setting a constant value """
         loudest_sound_cohort_size = 0.2
-        silence_threshold_multiplier = 1.5
+        silence_threshold_multiplier = 3
         if mode == "default":
             self.open_stream()
             tss = self.total_silence_samples
