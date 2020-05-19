@@ -27,6 +27,7 @@ class SpeakerService(HarmoniExternalServiceManager):
         self.audio_rate = param["audio_rate"]
         self.chunk_size = param["chunk_size"]
         self.device_name = param["device_name"]
+        self.output_device_index = None
         """ Setup the speaker """
         self.p = pyaudio.PyAudio()
         self.audio_format = pyaudio.paInt16  # How can we trasform it in a input parameter?
@@ -54,15 +55,17 @@ class SpeakerService(HarmoniExternalServiceManager):
         self.state = State.REQUEST
         self.actuation_update(actuation_completed = False)
         data = super().do(data)
-        data = ast.literal_eval(data)
         try:
             self.open_stream()
             rospy.loginfo("Writing data for speaker")
+            #data = ast.literal_eval(data)
             self.stream.write(data)
+            rospy.sleep(1)
             self.close_stream()
             self.state = State.SUCCESS
             self.actuation_update(actuation_completed = True)
         except:
+            rospy.loginfo("Speaker failed")
             self.state = State.FAILED
             self.actuation_update(actuation_completed = True)
         return
