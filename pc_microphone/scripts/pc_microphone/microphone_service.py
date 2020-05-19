@@ -7,7 +7,9 @@ import roslib
 import pyaudio
 import math
 import audioop
+import wave
 import numpy as np
+import ast
 from collections import deque
 from harmoni_common_lib.constants import State, RouterSensor, HelperFunctions
 from harmoni_common_lib.child import HarwareReadingServer
@@ -43,6 +45,8 @@ class MicrophoneService(HarmoniServiceManager):
         self.loudest_sound_value = param["loudest_sound_value"]
         self.device_name = param["device_name"]
         self.set_threshold = param["set_threshold"]
+        self.file_path = param["test_outdir"]
+        self.first_audio_frame = True
         """ Setup the microphone """
         self.p = pyaudio.PyAudio()
         self.audio_format = pyaudio.paInt16  # How can we trasform it in a input parameter?
@@ -56,6 +60,8 @@ class MicrophoneService(HarmoniServiceManager):
         super().__init__(self.state)
         return
 
+
+    
     def state_update(self):
         super().update(self.state)
         return
@@ -194,7 +200,7 @@ class MicrophoneService(HarmoniServiceManager):
     def determine_silence_threshold(self, mode):
         """Determine silence threshold from the mic or setting a constant value """
         loudest_sound_cohort_size = 0.2
-        silence_threshold_multiplier = 3
+        silence_threshold_multiplier = 5
         if mode == "default":
             self.open_stream()
             tss = self.total_silence_samples
@@ -209,6 +215,25 @@ class MicrophoneService(HarmoniServiceManager):
         rospy.loginfo("Average audio intensity is " + str(average_of_loudest_sounds))
         self.silence_threshold = average_of_loudest_sounds * silence_threshold_multiplier
         rospy.loginfo("Silence threshold set to " + str(self.silence_threshold))
+        return
+
+    def save_data(self):
+        """Init the subscriber """
+        self.mic_sub = rospy.Subscriber("/harmoni/sensing/listening/microphone", AudioData, self._record_audio_data_callback, queue_size=1) # Publishing the voice data
+        return
+
+    def _record_audio_data_callback(self, data):
+        if self.first_audio_frame:
+            print("Here")
+            wf = wave.open(self.file_path, 'wb')
+            wf.setnchannels(self.total_channels)
+            wf.setsampwidth(self.p.get_sample_size(self.audio_format))
+            wf.setframerate(self.audio_rate)
+            wf.setnframes(self.chunk_size)
+            wf.writeframes(''.join(data.data))
+            self.first_audio_frame = False
+        else:
+            wf.writeframes(''.join(data.data))
         return
 
 def main():
@@ -229,6 +254,7 @@ def main():
             service_server_list.append(HarwareReadingServer(name=service, service_manager=s))
             if test and (service_id == id_test):
                 rospy.loginfo("Testing the %s" %(service))
+                s.save_data()
                 s.start()
         if not test:
             for server in service_server_list:

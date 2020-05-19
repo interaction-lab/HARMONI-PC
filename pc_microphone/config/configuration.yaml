@@ -11,4 +11,4 @@ def_param:
   device_name: default
   loudest_sound_value: 6.5
   set_threshold: constant #default if you want to detect the silence, constant if you want to set it to a constant value
-  test_outdir: "/root/harmoni/catkin_ws/src/HARMONI-PC/pc_microphone/temp_data/test.wav"
+  test_outdir: "/root/harmoni_catkin_ws/src/HARMONI-PC/pc_microphone/temp_data/test.wav"

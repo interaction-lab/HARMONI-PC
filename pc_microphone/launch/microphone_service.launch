@@ -11,8 +11,8 @@
 			<param name="input_test" value="$(arg input_test)"/>
 			<param name="id_test" value="$(arg id_test)"/>
 			<node pkg="pc_microphone" type="microphone_service.py" name="pc_microphone" output="screen"/>
-  			<!--<node pkg="pc_microphone" type="microphone_test.py" name="pc_test_microphone" output="screen"/>-->
-	  </group>
+  			
+   </group>
 
 
 </launch>
