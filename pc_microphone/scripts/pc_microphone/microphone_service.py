@@ -17,14 +17,6 @@ from harmoni_common_lib.service_manager import HarmoniServiceManager
 from audio_common_msgs.msg import AudioData
 
 
-class Status():
-    """ Status of the microphone service """
-    INIT = 0  # init the service
-    LISTENING = 1  # start listen to the voice
-    NOT_LISTENING = 2  # stop listen to the voice
-    END = 3  # terminate the service
-
-
 class MicrophoneService(HarmoniServiceManager):
     """
     Microphone service
@@ -74,7 +66,6 @@ class MicrophoneService(HarmoniServiceManager):
 
     def start(self, rate=""):
         rospy.loginfo("Start the %s service" % self.name)
-        self.status = Status.LISTENING
         super().start(rate)
         if self.state == State.INIT:
             self.state = State.START
@@ -223,17 +214,18 @@ class MicrophoneService(HarmoniServiceManager):
         return
 
     def _record_audio_data_callback(self, data):
+        """Callback function to record data"""
+        data = np.fromstring(data.data, np.uint8)
         if self.first_audio_frame:
-            print("Here")
-            wf = wave.open(self.file_path, 'wb')
-            wf.setnchannels(self.total_channels)
-            wf.setsampwidth(self.p.get_sample_size(self.audio_format))
-            wf.setframerate(self.audio_rate)
-            wf.setnframes(self.chunk_size)
-            wf.writeframes(''.join(data.data))
+            self.wf = wave.open(self.file_path, 'wb')
+            self.wf.setnchannels(self.total_channels)
+            self.wf.setsampwidth(self.p.get_sample_size(self.audio_format))
+            self.wf.setframerate(self.audio_rate)
+            self.wf.setnframes(self.chunk_size)
+            self.wf.writeframes(b''.join(data))
             self.first_audio_frame = False
         else:
-            wf.writeframes(''.join(data.data))
+            self.wf.writeframes(b''.join(data))
         return
 
 def main():
