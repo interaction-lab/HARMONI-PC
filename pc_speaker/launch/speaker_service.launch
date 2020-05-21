@@ -3,7 +3,7 @@
 	<arg name="use_speaker" default="true"/>
 	<arg name="test" default="false"/>
 	<arg name="input_test" default="/root/harmoni_catkin_ws/src/HARMONI/harmoni_tts/temp_data/tts.wav"/>
-	<arg name="id_test" default="def"/>
+	<arg name="id_test" default="default"/>
   	<group if="$(arg use_speaker)">
 			<rosparam file="$(find pc_speaker)/config/configuration.yaml"/>
 			<param name="test" value="$(arg test)"/>

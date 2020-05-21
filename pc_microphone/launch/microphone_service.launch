@@ -4,7 +4,7 @@
 	<arg name="use_microphone" default="true"/>
 	<arg name="test" default="false"/>
 	<arg name="input_test" default=""/>
-	<arg name="id_test" default="def"/>
+	<arg name="id_test" default="default"/>
   	<group if="$(arg use_microphone)">
 			<rosparam file="$(find pc_microphone)/config/configuration.yaml"/>
 			<param name="test" value="$(arg test)"/>
