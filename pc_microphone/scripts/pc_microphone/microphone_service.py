@@ -39,14 +39,15 @@ class MicrophoneService(HarmoniServiceManager):
         self.set_threshold = param["set_threshold"]
         self.file_path = param["test_outdir"]
         self.first_audio_frame = True
+        self.service_id = HelperFunctions.get_child_id(service)
         """ Setup the microphone """
         self.p = pyaudio.PyAudio()
         self.audio_format = pyaudio.paInt16  # How can we trasform it in a input parameter?
         self.stream = None
         self.setup_microphone()
         """Init the publisher """
-        self.mic_pub = rospy.Publisher("/harmoni/sensing/listening/microphone", AudioData, queue_size=1)  # Publishing the voice data
-        self.mic_raw_pub = rospy.Publisher("/harmoni/sensing/microphone", AudioData, queue_size=1)  # Publishing raw_data
+        self.mic_pub = rospy.Publisher(RouterSensor.microphone.value+self.service_id+ "/talking", AudioData, queue_size=1)  # Publishing the voice data
+        self.mic_raw_pub = rospy.Publisher(RouterSensor.microphone.value+self.service_id, AudioData, queue_size=1)  # Publishing raw_data
         """Setup the microphone service as server """
         self.state = State.INIT
         super().__init__(self.state)

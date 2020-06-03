@@ -24,10 +24,11 @@ class FaceService(HarmoniExternalServiceManager):
         self.min_duration_viseme = param["min_duration_viseme"]
         self.speed_viseme = param["speed_viseme"]
         self.timer_interval = param["timer_interval"]
+        self.service_id =  HelperFunctions.get_child_id(self.name)
         """ Setup the face """
         self.setup_face()
         """ Setup the publisher for the face """
-        self.face_pub = rospy.Publisher("/harmoni/actuating/expressing/face", FaceRequest, queue_size=1)
+        self.face_pub = rospy.Publisher(RouterActuator.face.value + self.service_id +"/expressing", FaceRequest, queue_size=1)
         """Setup the face service as server """
         self.state = State.INIT 
         super().__init__(self.state)

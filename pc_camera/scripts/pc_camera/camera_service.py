@@ -25,10 +25,11 @@ class CameraService(HarmoniServiceManager):
         self.input_device_index = param["input_device_index"]
         self.show = param["show"]
         self.video_format = param["video_format"]
+        self.service_id = HelperFunctions.get_child_id(self.name)
         """ Setup the camera """
         self.cv_bridge = CvBridge()
         """ Init the camera publisher"""
-        self._video_pub = rospy.Publisher("/harmoni/sensing/watching/pc_camera", Image, queue_size=1)
+        self._video_pub = rospy.Publisher(RouterSensor.camera.value + self.service_id + "/watching", Image, queue_size=1)
         """Setup the camera service as server """
         self.setup_camera()
         self.state = State.INIT
