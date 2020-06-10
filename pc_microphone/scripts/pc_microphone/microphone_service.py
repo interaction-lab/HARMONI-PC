@@ -39,7 +39,7 @@ class MicrophoneService(HarmoniServiceManager):
         self.set_threshold = param["set_threshold"]
         self.file_path = param["test_outdir"]
         self.first_audio_frame = True
-        self.service_id = HelperFunctions.get_child_id(service)
+        self.service_id = HelperFunctions.get_child_id(self.name)
         """ Setup the microphone """
         self.p = pyaudio.PyAudio()
         self.audio_format = pyaudio.paInt16  # How can we trasform it in a input parameter?
