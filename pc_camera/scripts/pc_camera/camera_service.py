@@ -8,7 +8,8 @@ sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
 sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 import cv2 
 from cv_bridge import CvBridge, CvBridgeError
-from harmoni_common_lib.constants import State, RouterSensor, HelperFunctions
+from harmoni_common_lib.constants import State, RouterSensor
+from harmoni_common_lib.helper_functions import HelperFunctions
 from harmoni_common_lib.child import HarwareReadingServer
 from harmoni_common_lib.service_manager import HarmoniServiceManager
 from sensor_msgs.msg import Image
