@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 
 # Importing the libraries
+import cv2
+from sensor_msgs.msg import Image
+from harmoni_common_lib.service_manager import HarmoniServiceManager
+from harmoni_common_lib.child import HarwareReadingServer
+from harmoni_common_lib.helper_functions import HelperFunctions
+from harmoni_common_lib.constants import State, RouterSensor
+from cv_bridge import CvBridge, CvBridgeError
 import rospy
 import roslib
 import sys
 sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
 sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
-import cv2 
-from cv_bridge import CvBridge, CvBridgeError
-from harmoni_common_lib.constants import State, RouterSensor
-from harmoni_common_lib.helper_functions import HelperFunctions
-from harmoni_common_lib.child import HarwareReadingServer
-from harmoni_common_lib.service_manager import HarmoniServiceManager
-from sensor_msgs.msg import Image
+
 
 class CameraService(HarmoniServiceManager):
     """
@@ -54,7 +55,7 @@ class CameraService(HarmoniServiceManager):
             self.state = State.START
             self.state_update()
             try:
-                self.watch() # Start the camera service at the INIT
+                self.watch()  # Start the camera service at the INIT
             except:
                 self.state = State.FAILED
         else:
@@ -95,7 +96,7 @@ class CameraService(HarmoniServiceManager):
         self.height = int(self.video_cap.get(cv2.CAP_PROP_FRAME_HEIGHT) + 0.5)
         self.size = (self.width, self.height)
         self.fps = self.video_cap.get(cv2.CAP_PROP_FPS)
-        rospy.set_param("/"+self.name+"_param/fps/", self.fps)
+        rospy.set_param("/" + self.name + "_param/fps/", self.fps)
         return
 
     def close_stream(self):
@@ -116,6 +117,7 @@ class CameraService(HarmoniServiceManager):
                 break
         return
 
+
 def main():
     test = rospy.get_param("/test/")
     input_test = rospy.get_param("/input_test/")
@@ -129,11 +131,11 @@ def main():
         for service in list_service_names:
             print(service)
             service_id = HelperFunctions.get_child_id(service)
-            param = rospy.get_param("~"+service_id+"_param/")
+            param = rospy.get_param("~" + service_id + "_param/")
             s = CameraService(service, param)
             service_server_list.append(HarwareReadingServer(name=service, service_manager=s))
             if test and (service_id == id_test):
-                rospy.loginfo("Testing the %s" %(service))
+                rospy.loginfo("Testing the %s" % (service))
                 s.start()
         if not test:
             for server in service_server_list:

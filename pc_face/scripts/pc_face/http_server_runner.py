@@ -45,7 +45,7 @@ if __name__ == '__main__':
 
     p = subprocess.Popen(command)
     atexit.register(p.terminate)
-    
+
     while not rospy.is_shutdown():
         rospy.sleep(1)
     # rospy.spin()

@@ -15,6 +15,7 @@ from harmoni_common_lib.child import HardwareControlServer
 from harmoni_common_lib.service_manager import HarmoniExternalServiceManager
 from audio_common_msgs.msg import AudioData
 
+
 class SpeakerService(HarmoniExternalServiceManager):
     """
     Speaker service
@@ -31,7 +32,9 @@ class SpeakerService(HarmoniExternalServiceManager):
         self.output_device_index = None
         """ Setup the speaker """
         self.p = pyaudio.PyAudio()
-        self.audio_format = pyaudio.paInt16  # How can we trasform it in a input parameter?
+        self.audio_format = (
+            pyaudio.paInt16
+        )  # How can we trasform it in a input parameter?
         self.stream = None
         """Setup the speaker service as server """
         self.setup_speaker()
@@ -42,7 +45,7 @@ class SpeakerService(HarmoniExternalServiceManager):
     def actuation_update(self, actuation_completed):
         """Update the actuation state """
         rospy.loginfo("Update speaker state")
-        super().update(state = self.state, actuation_completed=actuation_completed)
+        super().update(state=self.state, actuation_completed=actuation_completed)
         return
 
     def test(self):
@@ -52,23 +55,26 @@ class SpeakerService(HarmoniExternalServiceManager):
         return success
 
     def do(self, data):
-        """ Do the speak"""
+        """ Do the speak """
         self.state = State.REQUEST
-        self.actuation_update(actuation_completed = False)
+        self.actuation_update(actuation_completed=False)
         data = super().do(data)
+        if type(data) == str:
+            data = ast.literal_eval(data)
+        data = data["audio_data"]
         try:
             self.open_stream()
             rospy.loginfo("Writing data for speaker")
-            #data = ast.literal_eval(data)
+            #
             self.stream.write(data)
             rospy.sleep(1)
             self.close_stream()
             self.state = State.SUCCESS
-            self.actuation_update(actuation_completed = True)
+            self.actuation_update(actuation_completed=True)
         except:
             rospy.loginfo("Speaker failed")
             self.state = State.FAILED
-            self.actuation_update(actuation_completed = True)
+            self.actuation_update(actuation_completed=True)
         return
 
     def setup_speaker(self):
@@ -80,13 +86,15 @@ class SpeakerService(HarmoniExternalServiceManager):
     def open_stream(self):
         """Opening the stream """
         rospy.loginfo("Opening the audio output stream")
-        self.stream = self.p.open(format=self.audio_format,
+        self.stream = self.p.open(
+            format=self.audio_format,
             channels=self.total_channels,
             rate=self.audio_rate,
-            input = False,
-            output = True,
+            input=False,
+            output=True,
             output_device_index=self.output_device_index,
-            frames_per_buffer=self.chunk_size)
+            frames_per_buffer=self.chunk_size,
+        )
         return
 
     def close_stream(self):
@@ -113,9 +121,10 @@ class SpeakerService(HarmoniExternalServiceManager):
         WAV to audiodata
         """
         file_handle = path
-        data = np.fromfile(file_handle, np.uint8)[24:] #Loading wav file
+        data = np.fromfile(file_handle, np.uint8)[24:]  # Loading wav file
         data = data.astype(np.uint8).tostring()
-        return data
+        return {"audio_data": data}
+
 
 def main():
     test = rospy.get_param("/test/")
@@ -130,11 +139,13 @@ def main():
         for service in list_service_names:
             print(service)
             service_id = HelperFunctions.get_child_id(service)
-            param = rospy.get_param("~"+service_id+"_param/")
+            param = rospy.get_param("~" + service_id + "_param/")
             s = SpeakerService(service, param)
-            service_server_list.append(HardwareControlServer(name=service, service_manager=s))
+            service_server_list.append(
+                HardwareControlServer(name=service, service_manager=s)
+            )
             if test and (service_id == id_test):
-                rospy.loginfo("Testing the %s" %(service))
+                rospy.loginfo("Testing the %s" % (service))
                 data = s.wav_to_data(input_test)
                 s.do(data)
         if not test:

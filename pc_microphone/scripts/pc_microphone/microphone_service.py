@@ -47,15 +47,13 @@ class MicrophoneService(HarmoniServiceManager):
         self.stream = None
         self.setup_microphone()
         """Init the publisher """
-        self.mic_pub = rospy.Publisher(RouterSensor.microphone.value+self.service_id+ "/talking", AudioData, queue_size=1)  # Publishing the voice data
-        self.mic_raw_pub = rospy.Publisher(RouterSensor.microphone.value+self.service_id, AudioData, queue_size=1)  # Publishing raw_data
+        self.mic_pub = rospy.Publisher(RouterSensor.microphone.value + self.service_id + "/talking", AudioData, queue_size=1)  # Publishing the voice data
+        self.mic_raw_pub = rospy.Publisher(RouterSensor.microphone.value + self.service_id, AudioData, queue_size=1)  # Publishing raw_data
         """Setup the microphone service as server """
         self.state = State.INIT
         super().__init__(self.state)
         return
 
-
-    
     def state_update(self):
         super().update(self.state)
         return
@@ -212,7 +210,7 @@ class MicrophoneService(HarmoniServiceManager):
 
     def save_data(self):
         """Init the subscriber """
-        self.mic_sub = rospy.Subscriber("/harmoni/sensing/listening/microphone", AudioData, self._record_audio_data_callback, queue_size=1) # Publishing the voice data
+        self.mic_sub = rospy.Subscriber("/harmoni/sensing/listening/microphone", AudioData, self._record_audio_data_callback, queue_size=1)  # Publishing the voice data
         return
 
     def _record_audio_data_callback(self, data):
@@ -230,6 +228,7 @@ class MicrophoneService(HarmoniServiceManager):
             self.wf.writeframes(b''.join(data))
         return
 
+
 def main():
     test = rospy.get_param("/test/")
     input_test = rospy.get_param("/input_test/")
@@ -243,11 +242,11 @@ def main():
         for service in list_service_names:
             print(service)
             service_id = HelperFunctions.get_child_id(service)
-            param = rospy.get_param("~"+service_id+"_param/")
+            param = rospy.get_param("~" + service_id + "_param/")
             s = MicrophoneService(service, param)
             service_server_list.append(HarwareReadingServer(name=service, service_manager=s))
             if test and (service_id == id_test):
-                rospy.loginfo("Testing the %s" %(service))
+                rospy.loginfo("Testing the %s" % (service))
                 s.save_data()
                 s.start()
         if not test:
