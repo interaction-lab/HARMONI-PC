@@ -66,12 +66,10 @@ class FaceService(HarmoniExternalServiceManager):
                 self.face_request = FaceRequest(
                     visemes=viseme_ids, viseme_ms=self.speed_viseme, times=viseme_times
                 )
-                rospy.loginfo("The viseme request is: \n %s" % self.face_request)
 
                 t = Timer(self.timer_interval, self.send_face_request)
                 t.start()
                 start_time = rospy.Time.now()
-
                 rospy.loginfo("The last viseme lasts %i" % viseme_times[-1])
                 time_sleep = int(viseme_times[-1]) + self.min_duration_viseme
                 rospy.sleep(time_sleep)
@@ -85,9 +83,6 @@ class FaceService(HarmoniExternalServiceManager):
                         self.face_request = FaceRequest(
                             aus=aus, au_degrees=f["au_degrees"], au_ms=au_ms
                         )
-                        rospy.loginfo(
-                            "The face expression request is %s" % self.face_request
-                        )
                         t = Timer(self.timer_interval, self.send_face_request)
                         t.start()
                         start_time = rospy.Time.now()
@@ -98,7 +93,6 @@ class FaceService(HarmoniExternalServiceManager):
                     au_degrees=valid_face_expression[-1]["au_degrees"],
                     au_ms=au_ms,
                 )
-                rospy.logdebug("The face expression request is %s" % self.face_request)
                 t = Timer(self.timer_interval, self.send_face_request)
                 t.start()
                 start_time = rospy.Time.now()

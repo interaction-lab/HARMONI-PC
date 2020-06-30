@@ -65,7 +65,6 @@ class SpeakerService(HarmoniExternalServiceManager):
         try:
             self.open_stream()
             rospy.loginfo("Writing data for speaker")
-            #
             self.stream.write(data)
             rospy.sleep(1)
             self.close_stream()
@@ -95,6 +94,7 @@ class SpeakerService(HarmoniExternalServiceManager):
             output_device_index=self.output_device_index,
             frames_per_buffer=self.chunk_size,
         )
+        self.stream.start_stream()
         return
 
     def close_stream(self):
@@ -102,6 +102,7 @@ class SpeakerService(HarmoniExternalServiceManager):
         rospy.loginfo("Closing the audio output stream")
         self.stream.stop_stream()
         self.stream.close()
+        self.p.terminate()
         return
 
     def get_index_device(self):
