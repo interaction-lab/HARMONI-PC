@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 
 # Importing the libraries
+import sys
+
+sys.path.remove("/opt/ros/kinetic/lib/python2.7/dist-packages")
+sys.path.append("/opt/ros/kinetic/lib/python2.7/dist-packages")
 import cv2
 from sensor_msgs.msg import Image
 from harmoni_common_lib.service_manager import HarmoniServiceManager
@@ -10,9 +14,6 @@ from harmoni_common_lib.constants import State, RouterSensor
 from cv_bridge import CvBridge, CvBridgeError
 import rospy
 import roslib
-import sys
-sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
-sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 
 
 class CameraService(HarmoniServiceManager):
@@ -31,7 +32,11 @@ class CameraService(HarmoniServiceManager):
         """ Setup the camera """
         self.cv_bridge = CvBridge()
         """ Init the camera publisher"""
-        self._video_pub = rospy.Publisher(RouterSensor.camera.value + self.service_id + "/watching", Image, queue_size=1)
+        self._video_pub = rospy.Publisher(
+            RouterSensor.camera.value + self.service_id + "/watching",
+            Image,
+            queue_size=1,
+        )
         """Setup the camera service as server """
         self.setup_camera()
         self.state = State.INIT
@@ -113,7 +118,7 @@ class CameraService(HarmoniServiceManager):
             self._video_pub.publish(image)
             if self.show:
                 cv2.imshow("PcCameraVideo", frame)
-            if cv2.waitKey(1) and (0xFF == ord('x')) and self.show:
+            if cv2.waitKey(1) and (0xFF == ord("x")) and self.show:
                 break
         return
 
@@ -133,7 +138,9 @@ def main():
             service_id = HelperFunctions.get_child_id(service)
             param = rospy.get_param("~" + service_id + "_param/")
             s = CameraService(service, param)
-            service_server_list.append(HarwareReadingServer(name=service, service_manager=s))
+            service_server_list.append(
+                HarwareReadingServer(name=service, service_manager=s)
+            )
             if test and (service_id == id_test):
                 rospy.loginfo("Testing the %s" % (service))
                 s.start()

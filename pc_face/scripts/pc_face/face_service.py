@@ -78,7 +78,7 @@ class FaceService(HarmoniExternalServiceManager):
             if valid_face_expression != []:
                 rospy.loginfo("Valid face expression not null")
                 if len(valid_face_expression) > 1:
-                    for ind, f in range(0, len(validated_face_expr) - 1):
+                    for ind, f in range(0, len(valid_face_expression) - 1):
                         rospy.loginfo("The valid expression is %s" % f)
                         aus = list(map(lambda s: s[2:], f["aus"]))
                         au_ms = f["au_ms"] * 1000
