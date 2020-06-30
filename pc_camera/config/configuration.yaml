@@ -1,7 +1,0 @@
-# Configuration file for the microphone
-pc_camera:
-  default_param:
-    input_device_index: 0
-    show: True
-    video_format: "rgb8"
-    fps: 30
