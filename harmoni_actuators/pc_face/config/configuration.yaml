@@ -1,0 +1,7 @@
+# Configuration file for the microphone
+pc_face:
+  default_param:
+    min_duration_viseme : 0.05 #s
+    speed_viseme: 10 #ms
+    timer_interval: 0.01 #s
+    shell_command: "firefox http://127.0.0.1:8080/index.html"
