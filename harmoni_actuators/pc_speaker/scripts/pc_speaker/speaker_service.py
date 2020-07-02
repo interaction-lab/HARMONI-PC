@@ -35,7 +35,15 @@ class SpeakerService(HarmoniExternalServiceManager):
         self.audio_format = (
             pyaudio.paInt16
         )  # How can we trasform it in a input parameter?
-        self.stream = None
+        self.stream = self.p.open(
+            format=self.audio_format,
+            channels=self.total_channels,
+            rate=self.audio_rate,
+            input=False,
+            output=True,
+            output_device_index=self.output_device_index,
+            frames_per_buffer=self.chunk_size,
+        )
         """Setup the speaker service as server """
         self.setup_speaker()
         self.state = State.INIT
@@ -66,12 +74,13 @@ class SpeakerService(HarmoniExternalServiceManager):
             self.open_stream()
             rospy.loginfo("Writing data for speaker")
             self.stream.write(data)
-            rospy.sleep(1)
+            #while self.stream.is_active():
+            #    rospy.sleep(0.1)
             self.close_stream()
             self.state = State.SUCCESS
             self.actuation_update(actuation_completed=True)
-        except:
-            rospy.loginfo("Speaker failed")
+        except IOError:
+            rospy.logwarn("Speaker failed: Audio appears to busy")
             self.state = State.FAILED
             self.actuation_update(actuation_completed=True)
         return
@@ -85,15 +94,6 @@ class SpeakerService(HarmoniExternalServiceManager):
     def open_stream(self):
         """Opening the stream """
         rospy.loginfo("Opening the audio output stream")
-        self.stream = self.p.open(
-            format=self.audio_format,
-            channels=self.total_channels,
-            rate=self.audio_rate,
-            input=False,
-            output=True,
-            output_device_index=self.output_device_index,
-            frames_per_buffer=self.chunk_size,
-        )
         self.stream.start_stream()
         return
 
@@ -101,8 +101,8 @@ class SpeakerService(HarmoniExternalServiceManager):
         """Closing the stream """
         rospy.loginfo("Closing the audio output stream")
         self.stream.stop_stream()
-        self.stream.close()
-        self.p.terminate()
+        #self.stream.close()
+        #self.p.terminate()
         return
 
     def get_index_device(self):

@@ -138,7 +138,6 @@ class MicrophoneService(HarmoniServiceManager):
                 raw_audio_bitstream = np.fromstring(latest_audio_data, np.uint8)
                 raw_audio = raw_audio_bitstream.tolist()
                 self.mic_raw_pub.publish(raw_audio)  # Publishing raw AudioData
-
                 if self.state == State.START:
                     # Check magnitude of audio
                     sliding_window.append(math.sqrt(abs(audioop.avg(latest_audio_data, self.audio_format_width))))
@@ -183,6 +182,7 @@ class MicrophoneService(HarmoniServiceManager):
         """
         for i in range(self.p.get_device_count()):
             device = self.p.get_device_info_by_index(i)
+            rospy.loginfo("The device name detected is: %s" %device["name"])
             if device["name"] == self.device_name:
                 rospy.loginfo("Found device with name " + self.device_name)
                 self.input_device_index = i
