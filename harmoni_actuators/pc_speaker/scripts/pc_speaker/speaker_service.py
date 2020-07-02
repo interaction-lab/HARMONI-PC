@@ -47,6 +47,7 @@ class SpeakerService(HarmoniExternalServiceManager):
         """Setup the speaker service as server """
         self.setup_speaker()
         self.state = State.INIT
+        self.open_stream()
         super().__init__(self.state)
         return
 
@@ -71,12 +72,13 @@ class SpeakerService(HarmoniExternalServiceManager):
             data = ast.literal_eval(data)
         data = data["audio_data"]
         try:
-            self.open_stream()
+            # self.open_stream()
             rospy.loginfo("Writing data for speaker")
+            rospy.loginfo(f"length of data is {len(data)}")
             self.stream.write(data)
             #while self.stream.is_active():
             #    rospy.sleep(0.1)
-            self.close_stream()
+            # self.close_stream()
             self.state = State.SUCCESS
             self.actuation_update(actuation_completed=True)
         except IOError:
@@ -146,9 +148,19 @@ def main():
                 HardwareControlServer(name=service, service_manager=s)
             )
             if test and (service_id == id_test):
-                rospy.loginfo("Testing the %s" % (service))
+                rospy.loginfo("0:Testing the %s" % (service))
+                # data = s.wav_to_data(input_test)
+                rospy.sleep(3)
+                rospy.loginfo("1: Testing the %s" % (service))
                 data = s.wav_to_data(input_test)
                 s.do(data)
+                rospy.loginfo("2: Testing the %s" % (service))
+                data = s.wav_to_data(input_test)
+                s.do(data)
+                rospy.loginfo("3: Testing the %s" % (service))
+                data = s.wav_to_data(input_test)
+                s.do(data)
+                rospy.loginfo("3: Testing the %s has been completed!" % (service))
         if not test:
             for server in service_server_list:
                 server.update_feedback()
