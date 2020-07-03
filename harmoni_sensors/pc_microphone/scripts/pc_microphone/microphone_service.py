@@ -143,51 +143,59 @@ class MicrophoneService(HarmoniServiceManager):
         prev_audio = deque(maxlen=self.previous_audio_seconds * chunks_per_second)
         started = False
         while not rospy.is_shutdown():
-            if self.state != State.FAILED:
-                latest_audio_data = self.stream.read(
-                    self.chunk_size, exception_on_overflow=False
-                )
-                raw_audio_bitstream = np.fromstring(latest_audio_data, np.uint8)
-                raw_audio = raw_audio_bitstream.tolist()
-                self.mic_raw_pub.publish(raw_audio)  # Publishing raw AudioData
-                if self.state == State.START:
-                    # Check magnitude of audio
-                    sliding_window.append(
-                        math.sqrt(
-                            abs(audioop.avg(latest_audio_data, self.audio_format_width))
-                        )
+            try:
+                if self.state != State.FAILED:
+                    latest_audio_data = self.stream.read(
+                        self.chunk_size, exception_on_overflow=False
                     )
-                    Calibrating = False
-                    if Calibrating:
-                        print_window = str([round(x, 1) for x in sliding_window])
-                        maximum = round(max(sliding_window), 2)
-                        rospy.loginfo("Noises" + print_window + str(maximum))
-                    if any([x > self.silence_threshold for x in sliding_window]):
-                        if not started:
-                            rospy.loginfo("Sound detected...")
-                            started = True
-                        current_audio += latest_audio_data
-                    elif started:
-                        rospy.loginfo("Finished detecting")
-                        all_audio_data = b"".join(prev_audio) + current_audio
-                        self.state = State.SUCCESS
-                        audio_bitstream = np.fromstring(all_audio_data, np.uint8)
-                        audio = audio_bitstream.tolist()
-                        rospy.loginfo("Publish listening data")
-                        self.mic_pub.publish(audio)  # Publishing AudioData of voice
-                        started = False
-                        sliding_window.clear()
-                        prev_audio.clear()
-                        current_audio = b""
-                        rospy.loginfo("Detection sent. Waiting for new audio...")
-                        self.state_update()
-                        self.state = State.START
+                    raw_audio_bitstream = np.fromstring(latest_audio_data, np.uint8)
+                    raw_audio = raw_audio_bitstream.tolist()
+                    self.mic_raw_pub.publish(raw_audio)  # Publishing raw AudioData
+                    if self.state == State.START:
+                        # Check magnitude of audio
+                        sliding_window.append(
+                            math.sqrt(
+                                abs(
+                                    audioop.avg(
+                                        latest_audio_data, self.audio_format_width
+                                    )
+                                )
+                            )
+                        )
+                        Calibrating = False
+                        if Calibrating:
+                            print_window = str([round(x, 1) for x in sliding_window])
+                            maximum = round(max(sliding_window), 2)
+                            rospy.loginfo("Noises" + print_window + str(maximum))
+                        if any([x > self.silence_threshold for x in sliding_window]):
+                            if not started:
+                                rospy.loginfo("Sound detected...")
+                                started = True
+                            current_audio += latest_audio_data
+                        elif started:
+                            rospy.loginfo("Finished detecting")
+                            all_audio_data = b"".join(prev_audio) + current_audio
+                            self.state = State.SUCCESS
+                            audio_bitstream = np.fromstring(all_audio_data, np.uint8)
+                            audio = audio_bitstream.tolist()
+                            rospy.loginfo("Publish listening data")
+                            self.mic_pub.publish(audio)  # Publishing AudioData of voice
+                            started = False
+                            sliding_window.clear()
+                            prev_audio.clear()
+                            current_audio = b""
+                            rospy.loginfo("Detection sent. Waiting for new audio...")
+                            self.state_update()
+                            self.state = State.START
+                        else:
+                            prev_audio.append(latest_audio_data)
                     else:
-                        prev_audio.append(latest_audio_data)
+                        rospy.loginfo("not listening")
                 else:
-                    rospy.loginfo("not listening")
-            else:
-                break
+                    break
+            except Exception as e:
+                rospy.loginfo("Caught the following exception" + e)
+
         rospy.loginfo("Shutting down")
         return
 
