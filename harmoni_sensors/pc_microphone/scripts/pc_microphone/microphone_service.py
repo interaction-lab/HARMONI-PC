@@ -13,7 +13,7 @@ import ast
 from collections import deque
 from harmoni_common_lib.constants import State, RouterSensor
 from harmoni_common_lib.helper_functions import HelperFunctions
-from harmoni_common_lib.child import HarwareReadingServer
+from harmoni_common_lib.child import HardwareReadingServer
 from harmoni_common_lib.service_manager import HarmoniServiceManager
 from audio_common_msgs.msg import AudioData
 
@@ -286,7 +286,7 @@ def main():
             param = rospy.get_param("~" + service_id + "_param/")
             s = MicrophoneService(service, param)
             service_server_list.append(
-                HarwareReadingServer(name=service, service_manager=s)
+                HardwareReadingServer(name=service, service_manager=s)
             )
             if test and (service_id == id_test):
                 rospy.loginfo("Testing the %s" % (service))
