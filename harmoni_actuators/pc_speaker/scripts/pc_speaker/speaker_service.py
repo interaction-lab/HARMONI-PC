@@ -31,23 +31,26 @@ class SpeakerService(HarmoniExternalServiceManager):
         self.device_name = param["device_name"]
         self.output_device_index = None
         """ Setup the speaker """
-        self.p = pyaudio.PyAudio()
+        # self.p = pyaudio.PyAudio()
         self.audio_format = (
             pyaudio.paInt16
         )  # How can we trasform it in a input parameter?
-        self.stream = self.p.open(
-            format=self.audio_format,
-            channels=self.total_channels,
-            rate=self.audio_rate,
-            input=False,
-            output=True,
-            output_device_index=self.output_device_index,
-            frames_per_buffer=self.chunk_size,
-        )
+        # self.stream = self.p.open(
+        #     format=self.audio_format,
+        #     channels=self.total_channels,
+        #     rate=self.audio_rate,
+        #     input=False,
+        #     output=True,
+        #     output_device_index=self.output_device_index,
+        #     frames_per_buffer=self.chunk_size,
+        # )
+        self.audio_publisher = rospy.Publisher(
+            "/audio/audio", AudioData, queue_size=1,
+        )  # Publishing the voice data
         """Setup the speaker service as server """
-        self.setup_speaker()
+        # self.setup_speaker()
         self.state = State.INIT
-        self.open_stream()
+        # self.open_stream()
         super().__init__(self.state)
         return
 
@@ -68,15 +71,18 @@ class SpeakerService(HarmoniExternalServiceManager):
         self.state = State.REQUEST
         self.actuation_update(actuation_completed=False)
         data = super().do(data)
+        print(data)
         if type(data) == str:
             data = ast.literal_eval(data)
         data = data["audio_data"]
+
         try:
             # self.open_stream()
             rospy.loginfo("Writing data for speaker")
             rospy.loginfo(f"length of data is {len(data)}")
-            self.stream.write(data)
-            #while self.stream.is_active():
+            self.audio_publisher.publish(data)
+            # self.stream.write(data)
+            # while self.stream.is_active():
             #    rospy.sleep(0.1)
             # self.close_stream()
             self.state = State.SUCCESS
@@ -103,8 +109,8 @@ class SpeakerService(HarmoniExternalServiceManager):
         """Closing the stream """
         rospy.loginfo("Closing the audio output stream")
         self.stream.stop_stream()
-        #self.stream.close()
-        #self.p.terminate()
+        # self.stream.close()
+        # self.p.terminate()
         return
 
     def get_index_device(self):
@@ -130,12 +136,33 @@ class SpeakerService(HarmoniExternalServiceManager):
 
 
 def main():
+    print("start")
     test = rospy.get_param("/test/")
     input_test = rospy.get_param("/input_test/")
     id_test = rospy.get_param("/id_test/")
+    # p = rospy.Publisher(
+    #     "/audio/audio", AudioData, queue_size=1,
+    # )  # Publishing the voice data
+    # print("get data")
+    # file_handle = input_test
+    # data = np.fromfile(file_handle, np.uint8)[24:]  # Loading wav file
+    # data = data.astype(np.uint8).tostring()
+
     try:
         service_name = RouterActuator.speaker.name
         rospy.init_node(service_name)
+        # print("publish")
+        # rospy.sleep(1)
+        # p.publish(data)
+        # rospy.sleep(1)
+        # p.publish(data)
+        # rospy.sleep(1)
+        # p.publish(data)
+        # for i in range(len(data) // 432):
+        #     print(i, data[i : i + 432])
+        #     p.publish(data[i : i + 432])
+        #     rospy.sleep(0.1)
+        # print("done")
         last_event = ""  # TODO: How to get information about last_event from behavior controller?
         list_service_names = HelperFunctions.get_child_list(service_name)
         service_server_list = []
@@ -153,13 +180,14 @@ def main():
                 rospy.sleep(3)
                 rospy.loginfo("1: Testing the %s" % (service))
                 data = s.wav_to_data(input_test)
-                s.do(data)
-                rospy.loginfo("2: Testing the %s" % (service))
-                data = s.wav_to_data(input_test)
-                s.do(data)
-                rospy.loginfo("3: Testing the %s" % (service))
-                data = s.wav_to_data(input_test)
-                s.do(data)
+                s.audio_publisher.publish(data["audio_data"])
+                # s.do(data)
+                # rospy.loginfo("2: Testing the %s" % (service))
+                # data = s.wav_to_data(input_test)
+                # s.do(data)
+                # rospy.loginfo("3: Testing the %s" % (service))
+                # data = s.wav_to_data(input_test)
+                # s.do(data)
                 rospy.loginfo("3: Testing the %s has been completed!" % (service))
         if not test:
             for server in service_server_list:
