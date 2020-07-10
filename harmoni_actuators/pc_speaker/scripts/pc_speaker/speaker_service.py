@@ -88,7 +88,7 @@ class SpeakerService(HarmoniExternalServiceManager):
             self.state = State.SUCCESS
             self.actuation_update(actuation_completed=True)
         except IOError:
-            rospy.logwarn("Speaker failed: Audio appears to busy")
+            rospy.logwarn("Speaker failed: Audio appears too busy")
             self.state = State.FAILED
             self.actuation_update(actuation_completed=True)
         return
@@ -188,7 +188,7 @@ def main():
                 # rospy.loginfo("3: Testing the %s" % (service))
                 # data = s.wav_to_data(input_test)
                 # s.do(data)
-                rospy.loginfo("3: Testing the %s has been completed!" % (service))
+                rospy.loginfo("1: Testing the %s has been completed!" % (service))
         if not test:
             for server in service_server_list:
                 server.update_feedback()
