@@ -14,18 +14,15 @@ from harmoni_common_lib.child import HardwareControlServer
 from harmoni_common_lib.service_manager import HarmoniExternalServiceManager
 
 
-class FaceService(HarmoniExternalServiceManager):
+class EyesService(HarmoniExternalServiceManager):
     """
-    Face service
+    Eyes service
     """
-
     def __init__(self, name, param):
         """ Initialization of variables and face parameters """
-        rospy.loginfo("FaceService initializing")
+        rospy.loginfo("EyesService initializing")
         self.name = name
-        self.min_duration_viseme = param["min_duration_viseme"]
-        self.speed_viseme = param["speed_viseme"]
-        self.timer_interval = param["timer_interval"]
+        self.gaze_speed = param["gaze_speed"]
         self.service_id = HelperFunctions.get_child_id(self.name)
         """ Setup the face """
         self.setup_face()
@@ -48,7 +45,7 @@ class FaceService(HarmoniExternalServiceManager):
 
     def test(self):
         super().test()
-        rospy.loginfo("Test the %s service" % self.name)
+        rospy.loginfo("Test the %s eyes service" % self.name)
         success = True
         return success
 
@@ -108,7 +105,204 @@ class FaceService(HarmoniExternalServiceManager):
 
     def setup_face(self):
         """ Setup the face """
-        rospy.loginfo("Setting up the %s" % self.name)
+        rospy.loginfo("Setting up the %s eyes" % self.name)
+        rospy.loginfo("Checking that face is connected to ROS websocket")
+        rospy.wait_for_service("/harmoni/actuating/face/is_connected")
+        rospy.loginfo("Done, face is connected to ROS websocket")
+        [
+            self.face_expression,
+            self.face_expression_names,
+        ] = self.get_facial_expressions_list()
+        self.visemes = [
+            "BILABIAL",
+            "LABIODENTAL",
+            "INTERDENTAL",
+            "DENTAL_ALVEOLAR",
+            "POSTALVEOLAR",
+            "VELAR_GLOTTAL",
+            "CLOSE_FRONT_VOWEL",
+            "OPEN_FRONT_VOWEL",
+            "MID_CENTRAL_VOWEL",
+            "OPEN_BACK_VOWEL",
+            "CLOSE_BACK_VOWEL",
+            "IDLE",
+        ]
+        return
+
+    def send_face_request(self):
+        """ Send the request to the web page"""
+        rospy.loginfo("Sending request to webpage of the face")
+        self.face_pub.publish(self.face_request)
+        return
+
+    def get_facial_expressions_list(self):
+        """ Get facial expression list from the resource file"""
+        facial_expression_list = []
+        face_expression_au = {}
+        base_dir = os.path.dirname(__file__)
+        with open(
+            base_dir + "/resource/cordial_face_expression.json", "r"
+        ) as json_file:
+            data = json.load(json_file)
+            for facial_expression in data:
+                facial_expression_list.append(facial_expression)
+                au_name = str(facial_expression)
+                aus = []
+                for dofs in data[facial_expression]["dofs"]:
+                    aus.append(str(dofs))
+                for keyframe in data[facial_expression]["keyframes"]:
+                    au_degrees = keyframe["pose"]
+                    au_ms = keyframe["time"]
+                    face_expression_au[au_name] = {
+                        "aus": aus,
+                        "au_degrees": au_degrees,
+                        "au_ms": au_ms,
+                    }
+        return face_expression_au, facial_expression_list
+
+    def get_face_data(self, data):
+        """ Get the validated data of the face"""
+        # rospy.loginfo("The face expressions available are %s" % self.face_expression)
+
+        data = ast.literal_eval(data)
+        behavior_data = ast.literal_eval(data["behavior_data"])
+        # print(data)
+
+        viseme_set = []
+        facial_expression = []
+        sentence = []
+        for b in behavior_data:
+            if "id" in b.keys():
+                if b["id"] in self.visemes:
+                    viseme_set.append(b)
+                if b["id"] in self.face_expression_names:
+                    facial_expression.append(b)
+            if "character" in b.keys():
+                sentence.append(b["value"])
+        # viseme = list(filter(lambda b: b["id"] in self.visemes, data))
+
+        # facial_expression = list(filter(lambda b: b["id"] in self.face_expression_names, data))
+        rospy.loginfo("These facial expressions include %s" % facial_expression)
+
+        ordered_facial_data = list(
+            sorted(facial_expression, key=lambda face: face["start"])
+        )
+
+        validated_face_expr = []
+        for fexp in ordered_facial_data:
+            validated_face_expr.append(self.face_expression[fexp["id"]])
+
+        for i in range(0, len(viseme_set) - 1):
+            viseme_set[i]["duration"] = (
+                viseme_set[i + 1]["start"] - viseme_set[i]["start"]
+            )
+
+        viseme_set[-1]["duration"] = self.min_duration_viseme
+
+        viseme_behaviors = list(
+            filter(lambda b: b["duration"] >= self.min_duration_viseme, viseme_set)
+        )
+        ordered_visemes = list(sorted(viseme_behaviors, key=lambda b: b["start"]))
+        rospy.loginfo("The validated facial expressions are %s" % validated_face_expr)
+        rospy.loginfo("The validated visemes are %s" % viseme_set)
+        print("Finished getting face data for sentence:", sentence)
+        return (validated_face_expr, viseme_set)
+
+class MouthService(HarmoniExternalServiceManager):
+    """
+    Mouth service
+    """
+
+    def __init__(self, name, param):
+        """ Initialization of variables and face parameters """
+        rospy.loginfo("MouthService initializing")
+        self.name = name
+        self.min_duration_viseme = param["min_duration_viseme"]
+        self.speed_viseme = param["speed_viseme"]
+        self.timer_interval = param["timer_interval"]
+        self.service_id = HelperFunctions.get_child_id(self.name)
+        """ Setup the face """
+        self.setup_face()
+        """ Setup the publisher for the face """
+        self.face_pub = rospy.Publisher(
+            RouterActuator.face.value + self.service_id + "/expressing",
+            FaceRequest,
+            queue_size=1,
+        )
+        """Setup the face service as server """
+        self.state = State.INIT
+        super().__init__(self.state)
+        return
+
+    def actuation_update(self, actuation_completed):
+        """Update the actuation state """
+        rospy.loginfo("Update face state")
+        super().update(state=self.state, actuation_completed=actuation_completed)
+        return
+
+    def test(self):
+        super().test()
+        rospy.loginfo("Test the %s service mouth" % self.name)
+        success = True
+        return success
+
+    def do(self, data):
+        """ Do the expression"""
+        data = super().do(data)
+        self.actuation_update(actuation_completed=False)
+        [valid_face_expression, visemes] = self.get_face_data(data)
+        try:
+            self.state = State.REQUEST
+
+            if visemes != []:
+                viseme_ids = list(map(lambda b: b["id"], visemes))
+                viseme_times = list(map(lambda b: b["start"], visemes))
+                self.face_request = FaceRequest(
+                    visemes=viseme_ids, viseme_ms=self.speed_viseme, times=viseme_times
+                )
+
+                t = Timer(self.timer_interval, self.send_face_request)
+                t.start()
+                start_time = rospy.Time.now()
+                rospy.loginfo("The last viseme lasts %i" % viseme_times[-1])
+                time_sleep = int(viseme_times[-1]) + self.min_duration_viseme
+                rospy.sleep(time_sleep)
+            if valid_face_expression != []:
+                rospy.loginfo("Valid face expression not null")
+                if len(valid_face_expression) > 1:
+                    for ind, f in range(0, len(valid_face_expression) - 1):
+                        rospy.loginfo("The valid expression is %s" % f)
+                        aus = list(map(lambda s: s[2:], f["aus"]))
+                        au_ms = f["au_ms"] * 1000
+                        self.face_request = FaceRequest(
+                            aus=aus, au_degrees=f["au_degrees"], au_ms=au_ms
+                        )
+                        t = Timer(self.timer_interval, self.send_face_request)
+                        t.start()
+                        start_time = rospy.Time.now()
+                aus = list(map(lambda s: s[2:], valid_face_expression[-1]["aus"]))
+                au_ms = valid_face_expression[-1]["au_ms"] * 1000
+                self.face_request = FaceRequest(
+                    aus=aus,
+                    au_degrees=valid_face_expression[-1]["au_degrees"],
+                    au_ms=au_ms,
+                )
+                t = Timer(self.timer_interval, self.send_face_request)
+                t.start()
+                start_time = rospy.Time.now()
+                rospy.loginfo("The last facial expression")
+                rospy.sleep(valid_face_expression[-1]["au_ms"])
+            self.state = State.SUCCESS
+            self.actuation_update(actuation_completed=True)
+        except:
+            self.state = State.FAILED
+            self.actuation_update(actuation_completed=True)
+        rospy.loginfo("Completed Expression")
+        return
+
+    def setup_face(self):
+        """ Setup the face """
+        rospy.loginfo("Setting up the %s mouth" % self.name)
         rospy.loginfo("Checking that face is connected to ROS websocket")
         rospy.wait_for_service("/harmoni/actuating/face/is_connected")
         rospy.loginfo("Done, face is connected to ROS websocket")
@@ -212,12 +406,16 @@ class FaceService(HarmoniExternalServiceManager):
         return (validated_face_expr, viseme_set)
 
 
+
+
+
 def main():
-    test = rospy.get_param("/test/")
-    input_test = rospy.get_param("/input_test/")
-    id_test = rospy.get_param("/id_test/")
-    try:
-        service_name = RouterActuator.face.name
+    service_name = RouterActuator.face.name
+    name = rospy.get_param("/name_"+service_name+"/")
+    test = rospy.get_param("/test_"+service_name+"/")
+    input_test = rospy.get_param("/input_test_"+service_name+"/")
+    id_test = rospy.get_param("/id_test_"+service_name+"/")
+    try:     
         rospy.init_node(service_name)
         last_event = ""  # TODO: How to get information about last_event from behavior controller?
         list_service_names = HelperFunctions.get_child_list(service_name)
@@ -225,14 +423,19 @@ def main():
         for service in list_service_names:
             print(service)
             service_id = HelperFunctions.get_child_id(service)
-            param = rospy.get_param("~" + service_id + "_param/")
-            s = FaceService(service, param)
-            service_server_list.append(
-                HardwareControlServer(name=service, service_manager=s)
-            )
+            service_name = HelperFunctions.get_service_name(service)
+            param_mouth = rospy.get_param(name+"/"+service_id + "_param/mouth/")
+            param_eyes = rospy.get_param(name+"/"+service_id + "_param/eyes/")
+            s_mouth = MouthService(service , param_mouth)
+            s_eyes = EyesService(service, param_eyes)
+            #TODO: fix pc_
+            service_server_list.append(HardwareControlServer(name= "pc_"+ service_name+ "_mouth_"+service_id, service_manager=s_mouth))
+            service_server_list.append(HardwareControlServer(name="pc_"+service_name+ "_eyes_"+service_id, service_manager=s_eyes))
         if test and (service_id == id_test):
-            rospy.loginfo("Testing the %s" % (service))
-            s.do(input_test)
+            rospy.loginfo("Testing the %s" % (service+ "_mouth"))
+            s_mouth.do(str({"behavior_data":str(input_test)}))
+            #rospy.loginfo("Testing the %s" % (service+ "_eyes"))
+            #s_eyes.do(input_test)
         if not test:
             for server in service_server_list:
                 server.update_feedback()

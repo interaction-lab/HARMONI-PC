@@ -9,9 +9,10 @@
 	<arg name="id_test" default="default"/>
   	<group if="$(arg use_face)">
 			<rosparam file="$(find pc_face)/config/configuration.yaml"/>
-			<param name="test" value="$(arg test)"/>
-			<param name="input_test" value="$(arg input_test)"/>
-			<param name="id_test" value="$(arg id_test)"/>
+			<param name="test_face" value="$(arg test)"/>
+			<param name="input_test_face" value="$(arg input_test)"/>
+			<param name="id_test_face" value="$(arg id_test)"/>
+			<param name="name_face" value="face"/>
 			<node pkg="pc_face" type="http_server_runner.py" name="face_http_server" output="screen" args="$(arg web_directory_path) $(arg port)" />
 			<node pkg="pc_face" type="face_service.py" name="pc_face" output="screen"/>
 			<include ns="bridge_face" file="$(find rosbridge_server)/launch/rosbridge_websocket.launch"/>
