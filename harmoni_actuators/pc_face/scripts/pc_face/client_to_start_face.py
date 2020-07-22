@@ -10,5 +10,5 @@ if __name__ == "__main__":
     try:
         response = service_call()
         print(response)
-    except rospy.ServiceException, e:
-        print ("Service call failed: %s" % e)
+    except:
+        print ("Service call failed")
