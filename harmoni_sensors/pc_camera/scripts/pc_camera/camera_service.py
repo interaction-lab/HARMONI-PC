@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 
 # Importing the libraries
+
 import sys
 
 sys.path.remove("/opt/ros/kinetic/lib/python2.7/dist-packages")
 sys.path.append("/opt/ros/kinetic/lib/python2.7/dist-packages")
-import cv2
-from sensor_msgs.msg import Image
-from harmoni_common_lib.service_manager import HarmoniServiceManager
-from harmoni_common_lib.child import HardwareReadingServer
-from harmoni_common_lib.helper_functions import HelperFunctions
-from harmoni_common_lib.constants import State, RouterSensor
-from cv_bridge import CvBridge, CvBridgeError
-import rospy
 import roslib
+import rospy
+from cv_bridge import CvBridge, CvBridgeError
+from harmoni_common_lib.constants import State, RouterSensor
+import harmoni_common_lib.helper_functions as hf
+from harmoni_common_lib.child import HardwareReadingServer
+from harmoni_common_lib.service_manager import HarmoniServiceManager
+from sensor_msgs.msg import Image
+import cv2
 
 
 class CameraService(HarmoniServiceManager):
@@ -28,7 +29,7 @@ class CameraService(HarmoniServiceManager):
         self.input_device_index = param["input_device_index"]
         self.show = param["show"]
         self.video_format = param["video_format"]
-        self.service_id = HelperFunctions.get_child_id(self.name)
+        self.service_id = hf.get_child_id(self.name)
         """ Setup the camera """
         self.cv_bridge = CvBridge()
         """ Init the camera publisher"""
@@ -131,11 +132,11 @@ def main():
         service_name = RouterSensor.camera.name
         rospy.init_node(service_name)
         last_event = ""  # TODO: How to get information about last_event from behavior controller?
-        list_service_names = HelperFunctions.get_child_list(service_name)
+        list_service_names = hf.get_child_list(service_name)
         service_server_list = []
         for service in list_service_names:
-            print(service)
-            service_id = HelperFunctions.get_child_id(service)
+            rospy.loginfo(service)
+            service_id = hf.get_child_id(service)
             param = rospy.get_param("~" + service_id + "_param/")
             s = CameraService(service, param)
             service_server_list.append(

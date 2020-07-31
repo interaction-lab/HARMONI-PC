@@ -9,7 +9,7 @@ import json
 from threading import Timer
 from pc_face.msg import FaceRequest
 from harmoni_common_lib.constants import State, RouterActuator
-from harmoni_common_lib.helper_functions import HelperFunctions
+import harmoni_common_lib.helper_functions as hf
 from harmoni_common_lib.child import HardwareControlServer
 from harmoni_common_lib.service_manager import HarmoniExternalServiceManager
 
@@ -220,7 +220,7 @@ class MouthService(HarmoniExternalServiceManager):
         self.min_duration_viseme = param["min_duration_viseme"]
         self.speed_viseme = param["speed_viseme"]
         self.timer_interval = param["timer_interval"]
-        self.service_id = HelperFunctions.get_child_id(self.name)
+        self.service_id = hf.get_child_id(self.name)
         """ Setup the face """
         self.setup_face()
         """ Setup the publisher for the face """
@@ -363,7 +363,6 @@ class MouthService(HarmoniExternalServiceManager):
 
         data = ast.literal_eval(data)
         behavior_data = ast.literal_eval(data["behavior_data"])
-        # print(data)
 
         viseme_set = []
         facial_expression = []
@@ -418,19 +417,16 @@ def main():
     try:     
         rospy.init_node(service_name)
         last_event = ""  # TODO: How to get information about last_event from behavior controller?
-        list_service_names = HelperFunctions.get_child_list(service_name)
+        list_service_names = hf.get_child_list(service_name)
         service_server_list = []
         for service in list_service_names:
-            print(service)
-            service_id = HelperFunctions.get_child_id(service)
-            service_name = HelperFunctions.get_service_name(service)
-            param_mouth = rospy.get_param(name+"/"+service_id + "_param/mouth/")
-            param_eyes = rospy.get_param(name+"/"+service_id + "_param/eyes/")
-            s_mouth = MouthService(service , param_mouth)
-            s_eyes = EyesService(service, param_eyes)
-            #TODO: fix pc_
-            service_server_list.append(HardwareControlServer(name= "pc_"+ service_name+ "_mouth_"+service_id, service_manager=s_mouth))
-            service_server_list.append(HardwareControlServer(name="pc_"+service_name+ "_eyes_"+service_id, service_manager=s_eyes))
+            rospy.loginfo(service)
+            service_id = hf.get_child_id(service)
+            param = rospy.get_param("~" + service_id + "_param/")
+            s = FaceService(service, param)
+            service_server_list.append(
+                HardwareControlServer(name=service, service_manager=s)
+            )
         if test and (service_id == id_test):
             rospy.loginfo("Testing the %s" % (service+ "_mouth"))
             s_mouth.do(str({"behavior_data":str(input_test)}))

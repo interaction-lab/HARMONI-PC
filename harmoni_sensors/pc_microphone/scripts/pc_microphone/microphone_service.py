@@ -12,7 +12,7 @@ import numpy as np
 import ast
 from collections import deque
 from harmoni_common_lib.constants import State, RouterSensor
-from harmoni_common_lib.helper_functions import HelperFunctions
+import harmoni_common_lib.helper_functions as hf
 from harmoni_common_lib.child import HardwareReadingServer
 from harmoni_common_lib.service_manager import HarmoniServiceManager
 from audio_common_msgs.msg import AudioData
@@ -40,7 +40,7 @@ class MicrophoneService(HarmoniServiceManager):
         self.set_threshold = param["set_threshold"]
         self.file_path = param["test_outdir"]
         self.first_audio_frame = True
-        self.service_id = HelperFunctions.get_child_id(self.name)
+        self.service_id = hf.get_child_id(self.name)
         """ Setup the microphone """
         self.p = pyaudio.PyAudio()
         self.audio_format = (
@@ -206,10 +206,10 @@ class MicrophoneService(HarmoniServiceManager):
         """
         for i in range(self.p.get_device_count()):
             device = self.p.get_device_info_by_index(i)
-            print(device)
+            rospy.loginfo(device)
             rospy.loginfo(f"Found device with name {self.device_name} at index {i}")
             if device["name"] == self.device_name:
-                print(device)
+                rospy.loginfo(device)
                 self.input_device_index = i
         return
 
@@ -278,11 +278,11 @@ def main():
         service_name = RouterSensor.microphone.name
         rospy.init_node(service_name)
         last_event = ""  # TODO: How to get information about last_event from behavior controller?
-        list_service_names = HelperFunctions.get_child_list(service_name)
+        list_service_names = hf.get_child_list(service_name)
         service_server_list = []
         for service in list_service_names:
-            print(service)
-            service_id = HelperFunctions.get_child_id(service)
+            rospy.loginfo(service)
+            service_id = hf.get_child_id(service)
             param = rospy.get_param("~" + service_id + "_param/")
             s = MicrophoneService(service, param)
             service_server_list.append(

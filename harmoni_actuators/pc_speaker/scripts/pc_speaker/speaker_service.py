@@ -10,7 +10,7 @@ import numpy as np
 import ast
 from collections import deque
 from harmoni_common_lib.constants import State, RouterActuator
-from harmoni_common_lib.helper_functions import HelperFunctions
+import harmoni_common_lib.helper_functions as hf
 from harmoni_common_lib.child import HardwareControlServer
 from harmoni_common_lib.service_manager import HarmoniExternalServiceManager
 from audio_common_msgs.msg import AudioData
@@ -71,20 +71,14 @@ class SpeakerService(HarmoniExternalServiceManager):
         self.state = State.REQUEST
         self.actuation_update(actuation_completed=False)
         data = super().do(data)
-        print(data)
         if type(data) == str:
             data = ast.literal_eval(data)
         data = data["audio_data"]
 
         try:
-            # self.open_stream()
             rospy.loginfo("Writing data for speaker")
             rospy.loginfo(f"length of data is {len(data)}")
             self.audio_publisher.publish(data)
-            # self.stream.write(data)
-            # while self.stream.is_active():
-            #    rospy.sleep(0.1)
-            # self.close_stream()
             self.state = State.SUCCESS
             self.actuation_update(actuation_completed=True)
         except IOError:
@@ -140,35 +134,16 @@ def main():
     test = rospy.get_param("/test/")
     input_test = rospy.get_param("/input_test/")
     id_test = rospy.get_param("/id_test/")
-    # p = rospy.Publisher(
-    #     "/audio/audio", AudioData, queue_size=1,
-    # )  # Publishing the voice data
-    # print("get data")
-    # file_handle = input_test
-    # data = np.fromfile(file_handle, np.uint8)[24:]  # Loading wav file
-    # data = data.astype(np.uint8).tostring()
 
     try:
         service_name = RouterActuator.speaker.name
         rospy.init_node(service_name)
-        # print("publish")
-        # rospy.sleep(1)
-        # p.publish(data)
-        # rospy.sleep(1)
-        # p.publish(data)
-        # rospy.sleep(1)
-        # p.publish(data)
-        # for i in range(len(data) // 432):
-        #     print(i, data[i : i + 432])
-        #     p.publish(data[i : i + 432])
-        #     rospy.sleep(0.1)
-        # print("done")
         last_event = ""  # TODO: How to get information about last_event from behavior controller?
-        list_service_names = HelperFunctions.get_child_list(service_name)
+        list_service_names = hf.get_child_list(service_name)
         service_server_list = []
         for service in list_service_names:
-            print(service)
-            service_id = HelperFunctions.get_child_id(service)
+            rospy.loginfo(service)
+            service_id = hf.get_child_id(service)
             param = rospy.get_param("~" + service_id + "_param/")
             s = SpeakerService(service, param)
             service_server_list.append(
@@ -181,13 +156,6 @@ def main():
                 rospy.loginfo("1: Testing the %s" % (service))
                 data = s.wav_to_data(input_test)
                 s.audio_publisher.publish(data["audio_data"])
-                # s.do(data)
-                # rospy.loginfo("2: Testing the %s" % (service))
-                # data = s.wav_to_data(input_test)
-                # s.do(data)
-                # rospy.loginfo("3: Testing the %s" % (service))
-                # data = s.wav_to_data(input_test)
-                # s.do(data)
                 rospy.loginfo("1: Testing the %s has been completed!" % (service))
         if not test:
             for server in service_server_list:
