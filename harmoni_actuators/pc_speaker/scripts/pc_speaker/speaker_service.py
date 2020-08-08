@@ -1,30 +1,34 @@
 #!/usr/bin/env python3
 
-# Importing the libraries
+# Common Imports
 import rospy
 import roslib
+
+from harmoni_common_lib.constants import State, ActuatorNameSpace
+from harmoni_common_lib.service_server import HarmoniServiceServer
+from harmoni_common_lib.service_manager import HarmoniServiceManager
+import harmoni_common_lib.helper_functions as hf
+
+# Specific Imports
+from audio_common_msgs.msg import AudioData
+from collections import deque
+import numpy as np
+import audioop
 import pyaudio
 import math
-import audioop
-import numpy as np
 import ast
-from collections import deque
-from harmoni_common_lib.constants import State, RouterActuator
-import harmoni_common_lib.helper_functions as hf
-from harmoni_common_lib.child import HardwareControlServer
-from harmoni_common_lib.service_manager import HarmoniExternalServiceManager
-from audio_common_msgs.msg import AudioData
 
 
-class SpeakerService(HarmoniExternalServiceManager):
+class SpeakerService(HarmoniServiceManager):
     """
     Speaker service
     """
 
     def __init__(self, name, param):
-        """ Initialization of variables and speaker parameters """
-        rospy.loginfo("SpeakerService initializing")
-        self.name = name
+        """ """
+        super().__init__(name)
+
+        """ Setup Params """
         self.total_channels = param["total_channels"]
         self.audio_rate = param["audio_rate"]
         self.chunk_size = param["chunk_size"]
@@ -32,45 +36,17 @@ class SpeakerService(HarmoniExternalServiceManager):
         self.output_device_index = None
         """ Setup the speaker """
         # self.p = pyaudio.PyAudio()
-        self.audio_format = (
-            pyaudio.paInt16
-        )  # How can we trasform it in a input parameter?
-        # self.stream = self.p.open(
-        #     format=self.audio_format,
-        #     channels=self.total_channels,
-        #     rate=self.audio_rate,
-        #     input=False,
-        #     output=True,
-        #     output_device_index=self.output_device_index,
-        #     frames_per_buffer=self.chunk_size,
-        # )
-        self.audio_publisher = rospy.Publisher(
-            "/audio/audio", AudioData, queue_size=1,
-        )  # Publishing the voice data
+        self.audio_format = pyaudio.paInt16
+        self.audio_publisher = rospy.Publisher("/audio/audio", AudioData, queue_size=1,)
         """Setup the speaker service as server """
-        # self.setup_speaker()
         self.state = State.INIT
         # self.open_stream()
-        super().__init__(self.state)
         return
-
-    def actuation_update(self, actuation_completed):
-        """Update the actuation state """
-        rospy.loginfo("Update speaker state")
-        super().update(state=self.state, actuation_completed=actuation_completed)
-        return
-
-    def test(self):
-        super().test()
-        rospy.loginfo("Test the %s service" % self.name)
-        success = True
-        return success
 
     def do(self, data):
         """ Do the speak """
         self.state = State.REQUEST
-        self.actuation_update(actuation_completed=False)
-        data = super().do(data)
+        self.actuation_completed = False
         if type(data) == str:
             data = ast.literal_eval(data)
         data = data["audio_data"]
@@ -80,11 +56,11 @@ class SpeakerService(HarmoniExternalServiceManager):
             rospy.loginfo(f"length of data is {len(data)}")
             self.audio_publisher.publish(data)
             self.state = State.SUCCESS
-            self.actuation_update(actuation_completed=True)
+            self.actuation_completed = True
         except IOError:
             rospy.logwarn("Speaker failed: Audio appears too busy")
             self.state = State.FAILED
-            self.actuation_update(actuation_completed=True)
+            self.actuation_completed = True
         return
 
     def setup_speaker(self):
@@ -132,11 +108,11 @@ class SpeakerService(HarmoniExternalServiceManager):
 def main():
     print("start")
     test = rospy.get_param("/test/")
-    input_test = rospy.get_param("/input_test/")
-    id_test = rospy.get_param("/id_test/")
+    test_input = rospy.get_param("/test_input/")
+    test_id = rospy.get_param("/test_id/")
 
     try:
-        service_name = RouterActuator.speaker.name
+        service_name = ActuatorNameSpace.speaker.name
         rospy.init_node(service_name)
         last_event = ""  # TODO: How to get information about last_event from behavior controller?
         list_service_names = hf.get_child_list(service_name)
@@ -147,14 +123,14 @@ def main():
             param = rospy.get_param("~" + service_id + "_param/")
             s = SpeakerService(service, param)
             service_server_list.append(
-                HardwareControlServer(name=service, service_manager=s)
+                HarmoniServiceServer(name=service, service_manager=s)
             )
-            if test and (service_id == id_test):
+            if test and (service_id == test_id):
                 rospy.loginfo("0:Testing the %s" % (service))
-                # data = s.wav_to_data(input_test)
+                # data = s.wav_to_data(test_input)
                 rospy.sleep(3)
                 rospy.loginfo("1: Testing the %s" % (service))
-                data = s.wav_to_data(input_test)
+                data = s.wav_to_data(test_input)
                 s.audio_publisher.publish(data["audio_data"])
                 rospy.loginfo("1: Testing the %s has been completed!" % (service))
         if not test:

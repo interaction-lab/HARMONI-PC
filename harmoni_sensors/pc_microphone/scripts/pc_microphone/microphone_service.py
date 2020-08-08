@@ -1,21 +1,25 @@
 #!/usr/bin/env python3
 
-# Importing the libraries
-import sys
+# Common Imports
 import rospy
 import roslib
+
+from harmoni_common_lib.constants import State
+from harmoni_common_lib.service_server import HarmoniServiceServer
+from harmoni_common_lib.service_manager import HarmoniServiceManager
+import harmoni_common_lib.helper_functions as hf
+
+# Other Imports
+from harmoni_common_lib.constants import SensorNameSpace
+from audio_common_msgs.msg import AudioData
+from collections import deque
+import sys
 import pyaudio
 import math
 import audioop
 import wave
 import numpy as np
 import ast
-from collections import deque
-from harmoni_common_lib.constants import State, RouterSensor
-import harmoni_common_lib.helper_functions as hf
-from harmoni_common_lib.child import HardwareReadingServer
-from harmoni_common_lib.service_manager import HarmoniServiceManager
-from audio_common_msgs.msg import AudioData
 
 
 class MicrophoneService(HarmoniServiceManager):
@@ -25,8 +29,7 @@ class MicrophoneService(HarmoniServiceManager):
 
     def __init__(self, name, param):
         """ Initialization of variables and microphone parameters """
-        rospy.loginfo("MicrophoneService initializing")
-        self.name = name
+        super().__init__(name)
         self.audio_format_width = param["audio_format_width"]
         self.chunk_size = param["chunk_size"]
         self.total_channels = param["total_channels"]
@@ -50,34 +53,20 @@ class MicrophoneService(HarmoniServiceManager):
         self.setup_microphone()
         """Init the publisher """
         self.mic_pub = rospy.Publisher(
-            RouterSensor.microphone.value + self.service_id + "/talking",
+            SensorNameSpace.microphone.value + self.service_id + "/talking",
             AudioData,
             queue_size=1,
         )  # Publishing the voice data
         self.mic_raw_pub = rospy.Publisher(
-            RouterSensor.microphone.value + self.service_id, AudioData, queue_size=1
+            SensorNameSpace.microphone.value + self.service_id, AudioData, queue_size=1
         )  # Publishing raw_data
-        """Setup the microphone service as server """
         self.state = State.INIT
-        super().__init__(self.state)
         return
-
-    def state_update(self):
-        super().update(self.state)
-        return
-
-    def test(self):
-        super().test()
-        rospy.loginfo("Test the %s service" % self.name)
-        success = True
-        return success
 
     def start(self, rate=""):
         rospy.loginfo("Start the %s service" % self.name)
-        super().start(rate)
         if self.state == State.INIT:
             self.state = State.START
-            self.state_update()
             try:
                 self.open_stream()
                 self.listen()  # Start the microphone service at the INIT
@@ -85,27 +74,21 @@ class MicrophoneService(HarmoniServiceManager):
                 self.state = State.FAILED
         else:
             self.state = State.START
-        self.state_update()
         return
 
     def stop(self):
         rospy.loginfo("Stop the %s service" % self.name)
-        super().stop()
         try:
             self.close_stream()
             self.state = State.SUCCESS
-            self.state_update()
         except:
             self.state = State.FAILED
-            self.state_update()
         return
 
     def pause(self):
         rospy.loginfo("Pause the %s service" % self.name)
-        super().pause()
         self.state = State.SUCCESS
         rospy.sleep(15)
-        # self.state_update()
         return
 
     def setup_microphone(self):
@@ -185,7 +168,6 @@ class MicrophoneService(HarmoniServiceManager):
                             prev_audio.clear()
                             current_audio = b""
                             rospy.loginfo("Detection sent. Waiting for new audio...")
-                            self.state_update()
                             self.state = State.START
                         else:
                             prev_audio.append(latest_audio_data)
@@ -200,8 +182,8 @@ class MicrophoneService(HarmoniServiceManager):
         return
 
     def get_index_device(self):
-        """ 
-        Find the input audio devices configured in ~/.asoundrc. 
+        """
+        Find the input audio devices configured in ~/.asoundrc.
         If the device is not found, pyaudio will use your machine default device
         """
         for i in range(self.p.get_device_count()):
@@ -272,10 +254,10 @@ class MicrophoneService(HarmoniServiceManager):
 
 def main():
     test = rospy.get_param("/test/")
-    input_test = rospy.get_param("/input_test/")
-    id_test = rospy.get_param("/id_test/")
+    test_input = rospy.get_param("/test_input/")
+    test_id = rospy.get_param("/test_id/")
     try:
-        service_name = RouterSensor.microphone.name
+        service_name = SensorNameSpace.microphone.name
         rospy.init_node(service_name)
         last_event = ""  # TODO: How to get information about last_event from behavior controller?
         list_service_names = hf.get_child_list(service_name)
@@ -286,9 +268,9 @@ def main():
             param = rospy.get_param("~" + service_id + "_param/")
             s = MicrophoneService(service, param)
             service_server_list.append(
-                HardwareReadingServer(name=service, service_manager=s)
+                HarmoniServiceServer(name=service, service_manager=s)
             )
-            if test and (service_id == id_test):
+            if test and (service_id == test_id):
                 rospy.loginfo("Testing the %s" % (service))
                 s.save_data()
                 s.start()

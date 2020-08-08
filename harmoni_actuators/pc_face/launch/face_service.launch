@@ -5,13 +5,13 @@
     <arg name="port" default="8080"/>
 	<arg name="use_face" default="true"/>
 	<arg name="test" default="false"/>
-	<arg name="input_test" default="[{'start': 0.075, 'time': 2,'type': 'action', 'id': 'QT/point_front'}, {'start': 0.075,'time': 2, 'type': 'viseme', 'id': 'POSTALVEOLAR'},{'start': 0.006, 'time': 2,  'type': 'action', 'id': 'happy_face'}]"/>
-	<arg name="id_test" default="default"/>
+	<arg name="test_input" default="[{'start': 0.075, 'time': 2,'type': 'action', 'id': 'QT/point_front'}, {'start': 0.075,'time': 2, 'type': 'viseme', 'id': 'POSTALVEOLAR'},{'start': 0.006, 'time': 2,  'type': 'action', 'id': 'happy_face'}]"/>
+	<arg name="test_id" default="default"/>
   	<group if="$(arg use_face)">
 			<rosparam file="$(find pc_face)/config/configuration.yaml"/>
 			<param name="test_face" value="$(arg test)"/>
-			<param name="input_test_face" value="$(arg input_test)"/>
-			<param name="id_test_face" value="$(arg id_test)"/>
+			<param name="test_input_face" value="$(arg test_input)"/>
+			<param name="test_id_face" value="$(arg test_id)"/>
 			<param name="name_face" value="face"/>
 			<node pkg="pc_face" type="http_server_runner.py" name="face_http_server" output="screen" args="$(arg web_directory_path) $(arg port)" />
 			<node pkg="pc_face" type="face_service.py" name="pc_face" output="screen"/>

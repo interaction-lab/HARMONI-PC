@@ -2,8 +2,8 @@
 <launch>   
 	<arg name="use_speaker" default="true"/>
 	<arg name="test" default="false"/>
-	<arg name="input_test" default="/root/harmoni_catkin_ws/src/HARMONI/harmoni_actuators/harmoni_tts/temp_data/tts.wav"/>
-	<arg name="id_test" default="default"/>
+	<arg name="test_input" default="/root/harmoni_catkin_ws/src/HARMONI/harmoni_actuators/harmoni_tts/temp_data/tts.wav"/>
+	<arg name="test_id" default="default"/>
 	<group if="$(arg use_speaker)">
 			<include file="/root/harmoni_catkin_ws/src/audio_common/audio_play/launch/play.launch">
 				<arg name="do_timestamp" value="false"/>
@@ -12,8 +12,8 @@
 			</include>
 			<rosparam file="$(find pc_speaker)/config/configuration.yaml"/>
 			<param name="test" value="$(arg test)"/>
-			<param name="input_test" value="$(arg input_test)"/>
-			<param name="id_test" value="$(arg id_test)"/>
+			<param name="test_input" value="$(arg test_input)"/>
+			<param name="test_id" value="$(arg test_id)"/>
 			<node pkg="pc_speaker" type="speaker_service.py" name="pc_speaker" output="screen"/>
     </group>
     <include file="$(find audio_play)/launch/play.launch">

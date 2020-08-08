@@ -1,58 +1,48 @@
 #!/usr/bin/env python3
 
-# Importing the libraries
+# Common Imports
 import rospy
 import roslib
+
+from harmoni_common_lib.constants import State
+from harmoni_common_lib.service_server import HarmoniServiceServer
+from harmoni_common_lib.service_manager import HarmoniServiceManager
+import harmoni_common_lib.helper_functions as hf
+
+# Specific Imports
+from harmoni_common_lib.constants import ActuatorNameSpace
+from pc_face.msg import FaceRequest
+from threading import Timer
+import json
 import ast
 import os
-import json
-from threading import Timer
-from pc_face.msg import FaceRequest
-from harmoni_common_lib.constants import State, RouterActuator
-import harmoni_common_lib.helper_functions as hf
-from harmoni_common_lib.child import HardwareControlServer
-from harmoni_common_lib.service_manager import HarmoniExternalServiceManager
 
 
-class EyesService(HarmoniExternalServiceManager):
+class EyesService(HarmoniServiceManager):
     """
     Eyes service
     """
+
     def __init__(self, name, param):
+        super().__init__(name)
         """ Initialization of variables and face parameters """
-        rospy.loginfo("EyesService initializing")
-        self.name = name
         self.gaze_speed = param["gaze_speed"]
         self.service_id = HelperFunctions.get_child_id(self.name)
         """ Setup the face """
         self.setup_face()
         """ Setup the publisher for the face """
         self.face_pub = rospy.Publisher(
-            RouterActuator.face.value + self.service_id + "/expressing",
+            ActuatorNameSpace.face.value + self.service_id + "/expressing",
             FaceRequest,
             queue_size=1,
         )
         """Setup the face service as server """
         self.state = State.INIT
-        super().__init__(self.state)
         return
-
-    def actuation_update(self, actuation_completed):
-        """Update the actuation state """
-        rospy.loginfo("Update face state")
-        super().update(state=self.state, actuation_completed=actuation_completed)
-        return
-
-    def test(self):
-        super().test()
-        rospy.loginfo("Test the %s eyes service" % self.name)
-        success = True
-        return success
 
     def do(self, data):
         """ Do the expression"""
-        data = super().do(data)
-        self.actuation_update(actuation_completed=False)
+        self.actuation_completed = False
         [valid_face_expression, visemes] = self.get_face_data(data)
         try:
             self.state = State.REQUEST
@@ -96,10 +86,10 @@ class EyesService(HarmoniExternalServiceManager):
                 rospy.loginfo("The last facial expression")
                 rospy.sleep(valid_face_expression[-1]["au_ms"])
             self.state = State.SUCCESS
-            self.actuation_update(actuation_completed=True)
+            self.actuation_completed = True
         except:
             self.state = State.FAILED
-            self.actuation_update(actuation_completed=True)
+            self.actuation_completed = True
         rospy.loginfo("Completed Expression")
         return
 
@@ -208,15 +198,16 @@ class EyesService(HarmoniExternalServiceManager):
         print("Finished getting face data for sentence:", sentence)
         return (validated_face_expr, viseme_set)
 
-class MouthService(HarmoniExternalServiceManager):
+
+class MouthService(HarmoniServiceManager):
     """
     Mouth service
     """
 
     def __init__(self, name, param):
+        super().__init__(name)
         """ Initialization of variables and face parameters """
         rospy.loginfo("MouthService initializing")
-        self.name = name
         self.min_duration_viseme = param["min_duration_viseme"]
         self.speed_viseme = param["speed_viseme"]
         self.timer_interval = param["timer_interval"]
@@ -225,31 +216,17 @@ class MouthService(HarmoniExternalServiceManager):
         self.setup_face()
         """ Setup the publisher for the face """
         self.face_pub = rospy.Publisher(
-            RouterActuator.face.value + self.service_id + "/expressing",
+            ActuatorNameSpace.face.value + self.service_id + "/expressing",
             FaceRequest,
             queue_size=1,
         )
         """Setup the face service as server """
         self.state = State.INIT
-        super().__init__(self.state)
         return
-
-    def actuation_update(self, actuation_completed):
-        """Update the actuation state """
-        rospy.loginfo("Update face state")
-        super().update(state=self.state, actuation_completed=actuation_completed)
-        return
-
-    def test(self):
-        super().test()
-        rospy.loginfo("Test the %s service mouth" % self.name)
-        success = True
-        return success
 
     def do(self, data):
         """ Do the expression"""
-        data = super().do(data)
-        self.actuation_update(actuation_completed=False)
+        self.actuation_completed = False
         [valid_face_expression, visemes] = self.get_face_data(data)
         try:
             self.state = State.REQUEST
@@ -293,10 +270,10 @@ class MouthService(HarmoniExternalServiceManager):
                 rospy.loginfo("The last facial expression")
                 rospy.sleep(valid_face_expression[-1]["au_ms"])
             self.state = State.SUCCESS
-            self.actuation_update(actuation_completed=True)
+            self.actuation_completed = True
         except:
             self.state = State.FAILED
-            self.actuation_update(actuation_completed=True)
+            self.actuation_completed = True
         rospy.loginfo("Completed Expression")
         return
 
@@ -405,16 +382,13 @@ class MouthService(HarmoniExternalServiceManager):
         return (validated_face_expr, viseme_set)
 
 
-
-
-
 def main():
-    service_name = RouterActuator.face.name
-    name = rospy.get_param("/name_"+service_name+"/")
-    test = rospy.get_param("/test_"+service_name+"/")
-    input_test = rospy.get_param("/input_test_"+service_name+"/")
-    id_test = rospy.get_param("/id_test_"+service_name+"/")
-    try:     
+    service_name = ActuatorNameSpace.face.name
+    name = rospy.get_param("/name_" + service_name + "/")
+    test = rospy.get_param("/test_" + service_name + "/")
+    test_input = rospy.get_param("/test_input_" + service_name + "/")
+    test_id = rospy.get_param("/test_id_" + service_name + "/")
+    try:
         rospy.init_node(service_name)
         last_event = ""  # TODO: How to get information about last_event from behavior controller?
         list_service_names = hf.get_child_list(service_name)
@@ -425,13 +399,13 @@ def main():
             param = rospy.get_param("~" + service_id + "_param/")
             s = FaceService(service, param)
             service_server_list.append(
-                HardwareControlServer(name=service, service_manager=s)
+                HarmoniServiceServer(name=service, service_manager=s)
             )
-        if test and (service_id == id_test):
-            rospy.loginfo("Testing the %s" % (service+ "_mouth"))
-            s_mouth.do(str({"behavior_data":str(input_test)}))
-            #rospy.loginfo("Testing the %s" % (service+ "_eyes"))
-            #s_eyes.do(input_test)
+        if test and (service_id == test_id):
+            rospy.loginfo("Testing the %s" % (service + "_mouth"))
+            s_mouth.do(str({"behavior_data": str(test_input)}))
+            # rospy.loginfo("Testing the %s" % (service+ "_eyes"))
+            # s_eyes.do(test_input)
         if not test:
             for server in service_server_list:
                 server.update_feedback()

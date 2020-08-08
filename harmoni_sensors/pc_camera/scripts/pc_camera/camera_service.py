@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 
-# Importing the libraries
+# Common Imports
+import rospy
+import roslib
 
+from harmoni_common_lib.constants import State
+from harmoni_common_lib.service_server import HarmoniServiceServer
+from harmoni_common_lib.service_manager import HarmoniServiceManager
+import harmoni_common_lib.helper_functions as hf
+
+# Other Imports
 import sys
 
 sys.path.remove("/opt/ros/kinetic/lib/python2.7/dist-packages")
 sys.path.append("/opt/ros/kinetic/lib/python2.7/dist-packages")
-import roslib
-import rospy
 from cv_bridge import CvBridge, CvBridgeError
-from harmoni_common_lib.constants import State, RouterSensor
-import harmoni_common_lib.helper_functions as hf
-from harmoni_common_lib.child import HardwareReadingServer
-from harmoni_common_lib.service_manager import HarmoniServiceManager
+from harmoni_common_lib.constants import SensorNameSpace
 from sensor_msgs.msg import Image
 import cv2
 
@@ -23,9 +26,8 @@ class CameraService(HarmoniServiceManager):
     """
 
     def __init__(self, name, param):
+        super().__init__(name)
         """ Initialization of variables and camera parameters """
-        rospy.loginfo("CameraService initializing")
-        self.name = name
         self.input_device_index = param["input_device_index"]
         self.show = param["show"]
         self.video_format = param["video_format"]
@@ -34,58 +36,39 @@ class CameraService(HarmoniServiceManager):
         self.cv_bridge = CvBridge()
         """ Init the camera publisher"""
         self._video_pub = rospy.Publisher(
-            RouterSensor.camera.value + self.service_id + "/watching",
+            SensorNameSpace.camera.value + self.service_id + "/watching",
             Image,
             queue_size=1,
         )
         """Setup the camera service as server """
         self.setup_camera()
         self.state = State.INIT
-        super().__init__(self.state)
         return
-
-    def state_update(self):
-        super().update(self.state)
-        return
-
-    def test(self):
-        super().test()
-        rospy.loginfo("Test the %s service" % self.name)
-        success = True
-        return success
 
     def start(self, rate=""):
         rospy.loginfo("Start the %s service" % self.name)
-        super().start(rate)
         if self.state == State.INIT:
             self.state = State.START
-            self.state_update()
             try:
                 self.watch()  # Start the camera service at the INIT
             except:
                 self.state = State.FAILED
         else:
             self.state = State.START
-        self.state_update()
         return
 
     def stop(self):
         rospy.loginfo("Stop the %s service" % self.name)
-        super().stop()
         try:
             self.close_stream()
             self.state = State.SUCCESS
-            self.state_update()
         except:
             self.state = State.FAILED
-            self.state_update()
         return
 
     def pause(self):
         rospy.loginfo("Pause the %s service" % self.name)
-        super().pause()
         self.state = State.SUCCESS
-        self.state_update()
         return
 
     def setup_camera(self):
@@ -126,10 +109,10 @@ class CameraService(HarmoniServiceManager):
 
 def main():
     test = rospy.get_param("/test/")
-    input_test = rospy.get_param("/input_test/")
-    id_test = rospy.get_param("/id_test/")
+    test_input = rospy.get_param("/test_input/")
+    test_id = rospy.get_param("/test_id/")
     try:
-        service_name = RouterSensor.camera.name
+        service_name = SensorNameSpace.camera.name
         rospy.init_node(service_name)
         last_event = ""  # TODO: How to get information about last_event from behavior controller?
         list_service_names = hf.get_child_list(service_name)
@@ -140,9 +123,9 @@ def main():
             param = rospy.get_param("~" + service_id + "_param/")
             s = CameraService(service, param)
             service_server_list.append(
-                HardwareReadingServer(name=service, service_manager=s)
+                HarmoniServiceServer(name=service, service_manager=s)
             )
-            if test and (service_id == id_test):
+            if test and (service_id == test_id):
                 rospy.loginfo("Testing the %s" % (service))
                 s.start()
         if not test:

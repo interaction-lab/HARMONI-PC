@@ -5,8 +5,6 @@ from std_srvs.srv import Trigger, TriggerResponse
 import os
 
 
-
-
 def callback_srv(data):
     os.system("pkill luakit")
     shell_command = "luakit --display:=0 -U http://172.18.0.4:8080"
@@ -21,5 +19,5 @@ def callback_srv(data):
 
 if __name__ == "__main__":
     rospy.init_node("browser_starter_server")
-    srv = rospy.Service('start_browser', Trigger, callback_srv)
+    srv = rospy.Service("start_browser", Trigger, callback_srv)
     rospy.spin()
