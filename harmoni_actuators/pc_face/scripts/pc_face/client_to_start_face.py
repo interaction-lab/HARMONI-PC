@@ -10,5 +10,5 @@ if __name__ == "__main__":
     try:
         response = service_call()
         print(response)
-    except:
+    except Exception:
         print("Service call failed")

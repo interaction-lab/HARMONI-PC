@@ -70,7 +70,7 @@ class MicrophoneService(HarmoniServiceManager):
             try:
                 self.open_stream()
                 self.listen()  # Start the microphone service at the INIT
-            except:
+            except Exception:
                 self.state = State.FAILED
         else:
             self.state = State.START
@@ -81,7 +81,7 @@ class MicrophoneService(HarmoniServiceManager):
         try:
             self.close_stream()
             self.state = State.SUCCESS
-        except:
+        except Exception:
             self.state = State.FAILED
         return
 
@@ -189,7 +189,7 @@ class MicrophoneService(HarmoniServiceManager):
         for i in range(self.p.get_device_count()):
             device = self.p.get_device_info_by_index(i)
             rospy.loginfo(device)
-            rospy.loginfo(f"Found device with name {self.device_name} at index {i}")
+            # rospy.loginfo(f"Found device with name {self.device_name} at index {i}")
             if device["name"] == self.device_name:
                 rospy.loginfo(device)
                 self.input_device_index = i

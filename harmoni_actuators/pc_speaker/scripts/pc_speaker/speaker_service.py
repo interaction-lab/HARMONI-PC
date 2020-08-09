@@ -91,7 +91,7 @@ class SpeakerService(HarmoniServiceManager):
         for i in range(self.p.get_device_count()):
             device = self.p.get_device_info_by_index(i)
             if device["name"] == self.device_name:
-                rospy.loginfo("Found device with name " + self.device_name)
+                # rospy.loginfo("Found device with name " + self.device_name)
                 self.output_device_index = i
                 return
 

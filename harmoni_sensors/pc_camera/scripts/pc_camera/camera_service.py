@@ -51,7 +51,7 @@ class CameraService(HarmoniServiceManager):
             self.state = State.START
             try:
                 self.watch()  # Start the camera service at the INIT
-            except:
+            except Exception:
                 self.state = State.FAILED
         else:
             self.state = State.START
@@ -62,7 +62,7 @@ class CameraService(HarmoniServiceManager):
         try:
             self.close_stream()
             self.state = State.SUCCESS
-        except:
+        except Exception:
             self.state = State.FAILED
         return
 
