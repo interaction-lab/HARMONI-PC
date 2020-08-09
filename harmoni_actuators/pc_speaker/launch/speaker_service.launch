@@ -16,8 +16,8 @@
 			<param name="test_id" value="$(arg test_id)"/>
 			<node pkg="pc_speaker" type="speaker_service.py" name="pc_speaker" output="screen"/>
     </group>
-    <include file="$(find audio_play)/launch/play.launch">
+    <!--<include file="$(find audio_play)/launch/play.launch">
         <arg name="do_timestamp" value = "false"/> 
         <arg name="format" value = "wave"/>
-    </include>
+    </include>-->
 </launch>
