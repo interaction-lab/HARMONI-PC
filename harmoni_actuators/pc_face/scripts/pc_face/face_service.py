@@ -25,10 +25,11 @@ class EyesService(HarmoniServiceManager):
     def __init__(self, name, param):
         super().__init__(name)
         """ Initialization of variables and face parameters """
+        self.name = name
         self.gaze_speed = param["gaze_speed"]
         self.service_id = hf.get_child_id(self.name)
         """ Setup the face """
-        self.setup_face()
+        #self.setup_face()
         """ Setup the publisher for the face """
         self.face_pub = rospy.Publisher(
             ActuatorNameSpace.face.value + self.service_id + "/expressing",
@@ -206,6 +207,7 @@ class MouthService(HarmoniServiceManager):
         super().__init__(name)
         """ Initialization of variables and face parameters """
         rospy.loginfo("MouthService initializing")
+        self.name = name
         self.min_duration_viseme = param["min_duration_viseme"]
         self.speed_viseme = param["speed_viseme"]
         self.timer_interval = param["timer_interval"]
@@ -394,10 +396,10 @@ def main():
             rospy.logerr("ERROR: Remember to add your configuration ID also in the harmoni_core config file")
             return
         service = hf.set_service_server(service_name, test_id)
-        s_eyes = EyesService(service, param_eyes)
-        s_mouth = MouthService(service, param_mouth)
-        service_server_eyes = HarmoniServiceServer(name=service, service_manager=s_eyes)
-        service_server_mouth = HarmoniServiceServer(name=service, service_manager=s_mouth)
+        s_eyes = EyesService(service + "_eyes_"+ test_id , param_eyes)
+        s_mouth = MouthService(service+ "_mouth_"+ test_id , param_mouth)
+        service_server_eyes = HarmoniServiceServer(name=service+"_eyes_"+ test_id, service_manager=s_eyes)
+        service_server_mouth = HarmoniServiceServer(name=service+"_mouth_"+ test_id, service_manager=s_mouth)
         if test:
             rospy.loginfo("Testing the %s" % (service + "_mouth"))
             rospy.sleep(1)
